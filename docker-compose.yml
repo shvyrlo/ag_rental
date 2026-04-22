@@ -1,0 +1,69 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rental}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rental}
+      POSTGRES_DB: ${POSTGRES_DB:-rental}
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rental} -d ${POSTGRES_DB:-rental}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-rental}:${POSTGRES_PASSWORD:-rental}@db:5432/${POSTGRES_DB:-rental}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:${WEB_PORT:-5174}}
+      PORT: 4000
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@ag-rental.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      ADMIN_NAME: ${ADMIN_NAME:-Administrator}
+      DEFAULT_CLIENT_EMAIL: ${DEFAULT_CLIENT_EMAIL:-client@ag-rental.local}
+      DEFAULT_CLIENT_PASSWORD: ${DEFAULT_CLIENT_PASSWORD:-client123}
+      DEFAULT_CLIENT_NAME: ${DEFAULT_CLIENT_NAME:-Demo Client}
+      DEFAULT_MECHANIC_EMAIL: ${DEFAULT_MECHANIC_EMAIL:-mechanic@ag-rental.local}
+      DEFAULT_MECHANIC_PASSWORD: ${DEFAULT_MECHANIC_PASSWORD:-mechanic123}
+      DEFAULT_MECHANIC_NAME: ${DEFAULT_MECHANIC_NAME:-Demo Mechanic}
+      # Verification providers. Blank ⇒ dev mode (console logging for email,
+      # "123456" for SMS).
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM: ${RESEND_FROM:-AG Rental <onboarding@resend.dev>}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_VERIFY_SERVICE_SID: ${TWILIO_VERIFY_SERVICE_SID:-}
+    ports:
+      - "${API_PORT:-4001}:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/migrations:/app/migrations
+
+  web:
+    build:
+      context: ./frontend
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:${API_PORT:-4001}}
+      VITE_HMR_PORT: ${WEB_PORT:-5174}
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "${WEB_PORT:-5174}:5173"
+    depends_on:
+      - api
+    # Whole-directory bind mount for HMR. Single-file binds (like
+    # mounting index.html alone) are unreliable on Docker Desktop macOS.
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  pgdata:
