@@ -19,4 +19,12 @@ export default defineConfig({
       clientPort: Number(process.env.VITE_HMR_PORT || 5174),
     },
   },
+  // `vite preview` (used in production on Railway) blocks unknown hosts
+  // by default. Allow any host so the app works behind Railway's proxy
+  // and any future custom domains.
+  preview: {
+    host: '0.0.0.0',
+    port: 5173,
+    allowedHosts: true,
+  },
 });
