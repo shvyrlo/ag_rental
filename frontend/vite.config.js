@@ -7,6 +7,8 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     strictPort: true,
+    // Allow any host (Railway proxy, local LAN IPs, custom domains).
+    allowedHosts: true,
     // Polling is required when running in Docker Desktop on macOS —
     // inotify doesn't work reliably across the osxfs / VirtioFS bridge.
     watch: {
