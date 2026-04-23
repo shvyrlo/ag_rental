@@ -14,14 +14,15 @@ import peterbiltImg from '../../assets/trucks/peterbilt-579.png';
 import cascadiaImg from '../../assets/trucks/freightliner-cascadia.png';
 
 // Match order matters — most specific keywords first.
-// Each entry also defines the "type bucket" we group units under.
+// Each entry also defines the "type bucket" we group units under and whether
+// it belongs in the Trucks or Trailers filter tab.
 const TYPE_MATCHERS = [
-  { key: 'step-deck', label: 'Step deck trailer', keys: ['step deck', 'step-deck', 'stepdeck', 'drop deck'], img: stepDeckImg },
-  { key: 'conestoga', label: 'Conestoga trailer', keys: ['conestoga', 'curtain'], img: conestogaImg },
-  { key: 'reefer', label: 'Reefer trailer', keys: ['reefer', 'refriger'], img: reeferImg },
-  { key: 'flatbed', label: 'Flatbed trailer', keys: ['flatbed', 'flat bed'], img: flatbedImg },
-  { key: 'peterbilt', label: 'Peterbilt 579', keys: ['peterbilt', '579'], img: peterbiltImg },
-  { key: 'cascadia', label: 'Freightliner Cascadia', keys: ['freightliner', 'cascadia'], img: cascadiaImg },
+  { key: 'step-deck', label: 'Step deck trailer', kind: 'trailer', keys: ['step deck', 'step-deck', 'stepdeck', 'drop deck'], img: stepDeckImg },
+  { key: 'conestoga', label: 'Conestoga trailer', kind: 'trailer', keys: ['conestoga', 'curtain'], img: conestogaImg },
+  { key: 'reefer', label: 'Reefer trailer', kind: 'trailer', keys: ['reefer', 'refriger'], img: reeferImg },
+  { key: 'flatbed', label: 'Flatbed trailer', kind: 'trailer', keys: ['flatbed', 'flat bed'], img: flatbedImg },
+  { key: 'peterbilt', label: 'Peterbilt 579', kind: 'truck', keys: ['peterbilt', '579'], img: peterbiltImg },
+  { key: 'cascadia', label: 'Freightliner Cascadia', kind: 'truck', keys: ['freightliner', 'cascadia'], img: cascadiaImg },
 ];
 
 const defaultImg = flatbedImg; // safe visual fallback
@@ -41,6 +42,7 @@ function pickImage(eq) {
 export default function RentEquipment() {
   const [equipment, setEquipment] = useState([]);
   const [rentals, setRentals] = useState([]);
+  const [kindFilter, setKindFilter] = useState('all'); // 'all' | 'trucks' | 'trailers'
   const [expandedTypeKey, setExpandedTypeKey] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [startDate, setStartDate] = useState('');
@@ -80,6 +82,7 @@ export default function RentEquipment() {
         buckets.set(key, {
           key,
           label: t?.label || eq.category || 'Other equipment',
+          kind: t?.kind || 'other',
           img: t?.img || defaultImg,
           units: [],
         });
@@ -93,6 +96,22 @@ export default function RentEquipment() {
       return ai - bi;
     });
   }, [available]);
+
+  const visibleGroups = useMemo(() => {
+    if (kindFilter === 'trucks') return typeGroups.filter((g) => g.kind === 'truck');
+    if (kindFilter === 'trailers') return typeGroups.filter((g) => g.kind === 'trailer');
+    return typeGroups;
+  }, [typeGroups, kindFilter]);
+
+  const truckCount = useMemo(
+    () => typeGroups.filter((g) => g.kind === 'truck').reduce((s, g) => s + g.units.length, 0),
+    [typeGroups],
+  );
+  const trailerCount = useMemo(
+    () => typeGroups.filter((g) => g.kind === 'trailer').reduce((s, g) => s + g.units.length, 0),
+    [typeGroups],
+  );
+  const totalCount = truckCount + trailerCount;
 
   const selected = useMemo(
     () => available.find((e) => e.id === selectedId) || null,
@@ -139,12 +158,51 @@ export default function RentEquipment() {
       </div>
 
       <section>
-        <h2 className="text-lg font-semibold mb-4">Available fleet</h2>
-        {typeGroups.length === 0 ? (
-          <p className="text-sm text-slate-500">No equipment is available right now.</p>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">Available fleet</h2>
+          <div
+            role="tablist"
+            aria-label="Filter by vehicle kind"
+            className="inline-flex rounded-lg border border-slate-200 bg-white p-1 text-sm"
+          >
+            {[
+              { key: 'all', label: 'All', count: totalCount },
+              { key: 'trucks', label: 'Trucks', count: truckCount },
+              { key: 'trailers', label: 'Trailers', count: trailerCount },
+            ].map((t) => {
+              const active = kindFilter === t.key;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => { setKindFilter(t.key); setExpandedTypeKey(null); }}
+                  className={
+                    'px-3 py-1.5 rounded-md font-medium transition ' +
+                    (active
+                      ? 'bg-brand-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:bg-slate-100')
+                  }
+                >
+                  {t.label}
+                  <span className={'ml-1.5 text-xs ' + (active ? 'text-white/80' : 'text-slate-400')}>
+                    {t.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {visibleGroups.length === 0 ? (
+          <p className="text-sm text-slate-500">
+            {typeGroups.length === 0
+              ? 'No equipment is available right now.'
+              : `No ${kindFilter === 'trucks' ? 'trucks' : 'trailers'} are available right now.`}
+          </p>
         ) : (
           <div className="space-y-4">
-            {typeGroups.map((group) => {
+            {visibleGroups.map((group) => {
               const isOpen = expandedTypeKey === group.key;
               const rates = group.units
                 .map((u) => Number(u.monthly_rate))
@@ -165,7 +223,7 @@ export default function RentEquipment() {
                     className="w-full text-left flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6 p-4 sm:p-6 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                     aria-expanded={isOpen}
                   >
-                    <div className="w-full h-64 sm:w-[32rem] sm:h-80 shrink-0 bg-slate-50 rounded-md border border-slate-200 flex items-center justify-center overflow-hidden">
+                    <div className="w-full h-52 sm:w-[26rem] sm:h-64 shrink-0 bg-slate-50 rounded-md border border-slate-200 flex items-center justify-center overflow-hidden">
                       <img
                         src={group.img}
                         alt={group.label}

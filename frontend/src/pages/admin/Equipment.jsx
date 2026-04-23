@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../lib/api.js';
 import StatusBadge from '../../components/StatusBadge.jsx';
 
-const CATEGORIES = ['Step deck', 'Flatbed', 'Reefer', 'Conestoga'];
+const CATEGORIES = ['Step deck', 'Flatbed', 'Reefer', 'Conestoga', 'Peterbilt 579', 'Freightliner Cascadia'];
 
 const EMPTY = {
   unit_number: '',
