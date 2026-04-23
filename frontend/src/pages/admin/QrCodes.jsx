@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { QRCodeCanvas } from 'qrcode.react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { api } from '../../lib/api.js';
+import agMarkUrl from '../../assets/ag-mark.svg';
 
 // Print sizes the admin can choose from for downloadable PNGs.
 // 150 DPI gives sharp large-format output without blowing past
@@ -14,22 +14,127 @@ const SIZES = [
 ];
 const DEFAULT_INCHES = 10;
 
-// Render the QR at the requested pixel size via the `qrcode` package and
-// trigger a browser download. This runs entirely off-screen so the on-page
-// preview stays compact.
-async function downloadQrAtSize(text, baseFilename, inches) {
-  const px = inches * DPI;
-  const dataUrl = await QRCode.toDataURL(text, {
+// AG mark SVG aspect ratio (viewBox 0 0 123 54.64).
+const AG_MARK_ASPECT = 123 / 54.64;
+
+// Brand red used for the "EQUIPMENT RENTAL" caption — matches the A in the logo.
+const BRAND_RED = '#c8213c';
+
+// Load an <img> once and cache it. Used to rasterize the AG mark onto canvases.
+let agMarkImagePromise = null;
+function loadAgMark() {
+  if (!agMarkImagePromise) {
+    agMarkImagePromise = new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = agMarkUrl;
+    });
+  }
+  return agMarkImagePromise;
+}
+
+function roundedRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// Render the branded QR (QR + centered AG card + red EQUIPMENT RENTAL caption)
+// onto a <canvas> at the requested pixel size. Uses error-correction level H
+// so the central ~22% obstruction is still scannable.
+async function renderBrandedQr(canvas, text, px) {
+  const captionH = Math.round(px * 0.12);
+  canvas.width = px;
+  canvas.height = px + captionH;
+  const ctx = canvas.getContext('2d');
+
+  // White bg for the whole poster (QR area + caption area).
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Render QR to an off-screen canvas, then blit onto our poster canvas.
+  const qrCanvas = document.createElement('canvas');
+  await QRCode.toCanvas(qrCanvas, text, {
     width: px,
     margin: 2,
-    errorCorrectionLevel: 'M',
+    errorCorrectionLevel: 'H',
+    color: { dark: '#000000', light: '#ffffff' },
   });
+  ctx.drawImage(qrCanvas, 0, 0, px, px);
+
+  // Centered white rounded card that will hold the AG mark.
+  const cardSize = Math.round(px * 0.22);
+  const cardX = (px - cardSize) / 2;
+  const cardY = (px - cardSize) / 2;
+  const cardR = cardSize * 0.18;
+  roundedRectPath(ctx, cardX, cardY, cardSize, cardSize, cardR);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+
+  // AG mark inside the card — fit by width, keep aspect.
+  const agImg = await loadAgMark();
+  const logoW = cardSize * 0.72;
+  const logoH = logoW / AG_MARK_ASPECT;
+  const logoX = cardX + (cardSize - logoW) / 2;
+  const logoY = cardY + (cardSize - logoH) / 2;
+  ctx.drawImage(agImg, logoX, logoY, logoW, logoH);
+
+  // "EQUIPMENT RENTAL" caption underneath.
+  const fontPx = Math.round(captionH * 0.7);
+  ctx.fillStyle = BRAND_RED;
+  ctx.font = `900 ${fontPx}px "Barlow Condensed", "Arial Narrow", "Impact", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  // Modest positive letter-spacing via character-by-character draw.
+  const label = 'EQUIPMENT RENTAL';
+  const tracking = fontPx * 0.05;
+  const widths = [...label].map((ch) => ctx.measureText(ch).width);
+  const totalW = widths.reduce((a, b) => a + b, 0) + tracking * (label.length - 1);
+  let x = (canvas.width - totalW) / 2;
+  const y = px + captionH / 2;
+  for (let i = 0; i < label.length; i++) {
+    ctx.fillText(label[i], x + widths[i] / 2, y);
+    x += widths[i] + tracking;
+  }
+}
+
+// Render the branded QR at print size and trigger a browser download.
+async function downloadQrAtSize(text, baseFilename, inches) {
+  const px = inches * DPI;
+  const canvas = document.createElement('canvas');
+  await renderBrandedQr(canvas, text, px);
   const a = document.createElement('a');
-  a.href = dataUrl;
+  a.href = canvas.toDataURL('image/png');
   a.download = `${baseFilename}-${inches}x${inches}in.png`;
   document.body.appendChild(a);
   a.click();
   a.remove();
+}
+
+// On-page branded preview. Re-renders whenever `text` changes.
+function BrandedQrPreview({ text, size = 192 }) {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    if (!text || !canvasRef.current) return;
+    let cancelled = false;
+    renderBrandedQr(canvasRef.current, text, size).catch(() => {});
+    return () => { cancelled = true; };
+  }, [text, size]);
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{ width: size, height: 'auto', display: 'block' }}
+    />
+  );
 }
 
 function SizePicker({ value, onChange }) {
@@ -161,7 +266,7 @@ function GeneralQrSection({ homeUrl, onError }) {
     <section className="rounded-xl border border-slate-200 bg-white p-6">
       <div className="flex flex-col sm:flex-row sm:items-start gap-6">
         <div className="shrink-0 rounded-lg border border-slate-200 p-3 bg-white">
-          <QRCodeCanvas value={homeUrl} size={192} includeMargin />
+          <BrandedQrPreview text={homeUrl} size={192} />
         </div>
         <div className="flex-1 space-y-3">
           <div>
@@ -288,7 +393,7 @@ function TrackedQrCard({ code, onRemove, onError }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 flex gap-4">
       <div className="shrink-0 rounded-lg border border-slate-200 p-2 bg-white h-fit">
-        <QRCodeCanvas value={code.scan_url} size={128} includeMargin />
+        <BrandedQrPreview text={code.scan_url} size={128} />
       </div>
       <div className="flex-1 min-w-0 space-y-2">
         <div className="flex items-start justify-between gap-2">
