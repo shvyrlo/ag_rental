@@ -162,10 +162,10 @@ export default function RentEquipment() {
                   <button
                     type="button"
                     onClick={() => toggleType(group.key)}
-                    className="w-full text-left flex items-center gap-4 p-4 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    className="w-full text-left flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6 p-4 sm:p-6 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                     aria-expanded={isOpen}
                   >
-                    <div className="w-40 h-24 shrink-0 bg-slate-50 rounded-md border border-slate-200 flex items-center justify-center overflow-hidden">
+                    <div className="w-full h-64 sm:w-[32rem] sm:h-80 shrink-0 bg-slate-50 rounded-md border border-slate-200 flex items-center justify-center overflow-hidden">
                       <img
                         src={group.img}
                         alt={group.label}
@@ -174,8 +174,8 @@ export default function RentEquipment() {
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-slate-900 truncate">{group.label}</p>
-                      <p className="text-sm text-slate-600">
+                      <p className="font-semibold text-xl sm:text-2xl text-slate-900 truncate">{group.label}</p>
+                      <p className="mt-1 text-base text-slate-600">
                         {group.units.length} {group.units.length === 1 ? 'unit' : 'units'} available
                         {startingRate !== null && (
                           <>
@@ -186,13 +186,13 @@ export default function RentEquipment() {
                           </>
                         )}
                       </p>
-                      <p className="mt-1 text-xs font-medium text-brand-700">
+                      <p className="mt-2 text-sm font-medium text-brand-700">
                         {isOpen ? 'Click to collapse' : 'Click to see available units'}
                       </p>
                     </div>
                     <svg
                       aria-hidden
-                      className={'h-5 w-5 text-slate-400 shrink-0 transition-transform ' + (isOpen ? 'rotate-180' : '')}
+                      className={'h-6 w-6 text-slate-400 shrink-0 transition-transform ' + (isOpen ? 'rotate-180' : '')}
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >
