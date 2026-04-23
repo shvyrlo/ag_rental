@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api.js';
 import StatusBadge from '../../components/StatusBadge.jsx';
+import { useT } from '../../i18n/i18n.jsx';
 
 export default function ClientPayments() {
+  const t = useT();
   const [payments, setPayments] = useState([]);
   const [error, setError] = useState(null);
   const [payingId, setPayingId] = useState(null);
@@ -37,9 +39,9 @@ export default function ClientPayments() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Payments</h1>
+        <h1 className="text-2xl font-bold">{t('Payments')}</h1>
         <p className="text-slate-600">
-          Outstanding balance:{' '}
+          {t('Outstanding balance:')}{' '}
           <span className="font-semibold text-slate-900">
             ${totalOutstanding.toFixed(2)}
           </span>
@@ -52,10 +54,10 @@ export default function ClientPayments() {
         <table className="min-w-full text-sm">
           <thead className="bg-slate-50 text-slate-700 text-left">
             <tr>
-              <th className="px-4 py-2">Rental</th>
-              <th className="px-4 py-2">Amount</th>
-              <th className="px-4 py-2">Method</th>
-              <th className="px-4 py-2">Status</th>
+              <th className="px-4 py-2">{t('Rental')}</th>
+              <th className="px-4 py-2">{t('Amount')}</th>
+              <th className="px-4 py-2">{t('Method')}</th>
+              <th className="px-4 py-2">{t('Status')}</th>
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
@@ -75,14 +77,14 @@ export default function ClientPayments() {
                       onClick={() => pay(p.id)}
                       disabled={payingId === p.id}
                     >
-                      {payingId === p.id ? 'Processing…' : 'Pay now'}
+                      {payingId === p.id ? t('Processing…') : t('Pay now')}
                     </button>
                   )}
                 </td>
               </tr>
             ))}
             {payments.length === 0 && (
-              <tr><td className="px-4 py-6 text-slate-500" colSpan={5}>No payments yet.</td></tr>
+              <tr><td className="px-4 py-6 text-slate-500" colSpan={5}>{t('No payments yet.')}</td></tr>
             )}
           </tbody>
         </table>

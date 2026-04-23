@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useT } from '../i18n/i18n.jsx';
 
 // Two-step account verification:
 //   1. Email  (required — user can't reach client dashboard without this)
@@ -10,6 +11,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 // Both steps call the backend, which returns a fresh user record and
 // token on success; we push those back into AuthContext via applyAuth.
 export default function Verify() {
+  const t = useT();
   const { user, applyAuth, refreshUser, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -65,9 +67,9 @@ export default function Verify() {
         )}
 
         <div className="pt-4 border-t border-slate-200 text-xs text-slate-500">
-          Signed in as <span className="font-medium">{user.email}</span>.{' '}
+          {t('Signed in as')} <span className="font-medium">{user.email}</span>.{' '}
           <button onClick={logout} className="text-brand-700 hover:underline">
-            Sign out
+            {t('Sign out')}
           </button>
         </div>
       </div>
@@ -76,13 +78,14 @@ export default function Verify() {
 }
 
 function Stepper({ current, user }) {
+  const t = useT();
   const emailDone = user.email_verified;
   const phoneDone = user.phone_verified;
   return (
     <div className="flex items-center gap-3 text-sm">
-      <StepPill done={emailDone} active={current === 'email'} label="1. Email" />
+      <StepPill done={emailDone} active={current === 'email'} label={t('1. Email')} />
       <div className="h-px flex-1 bg-slate-200" />
-      <StepPill done={phoneDone} active={current === 'phone'} label="2. Phone" />
+      <StepPill done={phoneDone} active={current === 'phone'} label={t('2. Phone')} />
     </div>
   );
 }
@@ -97,6 +100,7 @@ function StepPill({ done, active, label }) {
 
 // ─── Email step ─────────────────────────────────────────────────
 function EmailStep({ user, onVerified }) {
+  const t = useT();
   const [code, setCode] = useState('');
   const [status, setStatus] = useState(null); // 'sending' | 'sent' | null
   const [error, setError] = useState(null);
@@ -151,15 +155,15 @@ function EmailStep({ user, onVerified }) {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900">Verify your email</h1>
+      <h1 className="text-2xl font-bold text-slate-900">{t('Verify your email')}</h1>
       <p className="mt-1 text-sm text-slate-600">
-        We sent a 6-digit code to <span className="font-medium">{user.email}</span>.
-        Enter it below to finish setting up your account.
+        {t('We sent a 6-digit code to')} <span className="font-medium">{user.email}</span>.
+        {' '}{t('Enter it below to finish setting up your account.')}
       </p>
 
       <form onSubmit={submit} className="mt-6 space-y-4">
         <div className="field">
-          <label>Verification code</label>
+          <label>{t('Verification code')}</label>
           <input
             type="text"
             inputMode="numeric"
@@ -174,15 +178,15 @@ function EmailStep({ user, onVerified }) {
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
         {status === 'sent' && !error && (
-          <p className="text-sm text-emerald-700">Code sent. Check your inbox.</p>
+          <p className="text-sm text-emerald-700">{t('Code sent. Check your inbox.')}</p>
         )}
         <button type="submit" className="btn-primary w-full" disabled={busy || code.length < 4}>
-          {busy ? 'Verifying…' : 'Verify email'}
+          {busy ? t('Verifying…') : t('Verify email')}
         </button>
       </form>
 
       <button onClick={resend} className="mt-3 text-sm text-brand-700 hover:underline">
-        {sent ? 'Resend code' : 'Send code'}
+        {sent ? t('Resend code') : t('Send code')}
       </button>
     </div>
   );
@@ -190,6 +194,7 @@ function EmailStep({ user, onVerified }) {
 
 // ─── Phone step (optional) ─────────────────────────────────────
 function PhoneStep({ user, onVerified, onSkip }) {
+  const t = useT();
   const [phone, setPhone] = useState(user.phone || '');
   const [code, setCode] = useState('');
   const [sent, setSent] = useState(false);
@@ -234,16 +239,15 @@ function PhoneStep({ user, onVerified, onSkip }) {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900">Verify your phone</h1>
+      <h1 className="text-2xl font-bold text-slate-900">{t('Verify your phone')}</h1>
       <p className="mt-1 text-sm text-slate-600">
-        Optional, but recommended — we'll text you about rental pickups
-        and repair updates.
+        {t('Optional, but recommended — we\'ll text you about rental pickups and repair updates.')}
       </p>
 
       {!sent ? (
         <form onSubmit={sendCode} className="mt-6 space-y-4">
           <div className="field">
-            <label>Mobile number</label>
+            <label>{t('Mobile number')}</label>
             <input
               type="tel"
               placeholder="(630) 555-0123"
@@ -252,21 +256,21 @@ function PhoneStep({ user, onVerified, onSkip }) {
               onChange={(e) => setPhone(e.target.value)}
             />
             <p className="text-xs text-slate-500">
-              US numbers are formatted automatically. Include + and country code for international.
+              {t('US numbers are formatted automatically. Include + and country code for international.')}
             </p>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button type="submit" className="btn-primary w-full" disabled={busy}>
-            {busy ? 'Sending…' : 'Send SMS code'}
+            {busy ? t('Sending…') : t('Send SMS code')}
           </button>
         </form>
       ) : (
         <form onSubmit={verify} className="mt-6 space-y-4">
           <p className="text-sm text-slate-600">
-            Code sent to <span className="font-medium">{sentPhone}</span>.
+            {t('Code sent to')} <span className="font-medium">{sentPhone}</span>.
           </p>
           <div className="field">
-            <label>Verification code</label>
+            <label>{t('Verification code')}</label>
             <input
               type="text"
               inputMode="numeric"
@@ -281,24 +285,24 @@ function PhoneStep({ user, onVerified, onSkip }) {
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button type="submit" className="btn-primary w-full" disabled={busy || code.length < 4}>
-            {busy ? 'Verifying…' : 'Verify phone'}
+            {busy ? t('Verifying…') : t('Verify phone')}
           </button>
           <button
             type="button"
             className="text-sm text-slate-600 hover:underline"
             onClick={() => { setSent(false); setCode(''); setError(null); }}
           >
-            Change phone number
+            {t('Change phone number')}
           </button>
         </form>
       )}
 
       <div className="mt-6 pt-4 border-t border-slate-200">
         <button onClick={onSkip} className="btn-secondary w-full">
-          Skip for now
+          {t('Skip for now')}
         </button>
         <p className="mt-2 text-xs text-slate-500 text-center">
-          You can verify your phone later from your dashboard.
+          {t('You can verify your phone later from your dashboard.')}
         </p>
       </div>
     </div>

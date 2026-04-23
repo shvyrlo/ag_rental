@@ -1,3 +1,5 @@
+import { useT } from '../i18n/i18n.jsx';
+
 const COLORS = {
   available: 'bg-green-100 text-green-800',
   rented: 'bg-blue-100 text-blue-800',
@@ -23,11 +25,13 @@ const COLORS = {
 };
 
 export default function StatusBadge({ status }) {
+  const t = useT();
   if (!status) return null;
   const cls = COLORS[status] || 'bg-slate-100 text-slate-700';
+  const human = String(status).replace('_', ' ');
   return (
     <span className={`badge ${cls}`}>
-      {String(status).replace('_', ' ')}
+      {t(human)}
     </span>
   );
 }

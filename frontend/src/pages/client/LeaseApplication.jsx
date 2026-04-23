@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../../lib/api.js';
 import StatusBadge from '../../components/StatusBadge.jsx';
+import { useT } from '../../i18n/i18n.jsx';
 
 const TRAILER_TYPES = ['Step deck', 'Flatbed', 'Reefer', 'Conestoga'];
 
@@ -36,6 +37,7 @@ function readFileAsDataURL(file) {
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
 
 export default function LeaseApplication() {
+  const t = useT();
   const [form, setForm] = useState(EMPTY);
   const [mine, setMine] = useState([]);
   const [error, setError] = useState(null);
@@ -83,7 +85,7 @@ export default function LeaseApplication() {
     setSuccess(null);
 
     if (!form.agreed_to_terms) {
-      setError('You must agree to the terms of service.');
+      setError(t('You must agree to the terms of service.'));
       return;
     }
 
@@ -96,7 +98,7 @@ export default function LeaseApplication() {
           quantity: form.quantity === '' ? null : Number(form.quantity),
         },
       });
-      setSuccess('Your application has been submitted.');
+      setSuccess(t('Your application has been submitted.'));
       setForm(EMPTY);
       if (dlRef.current) dlRef.current.value = '';
       if (articlesRef.current) articlesRef.current.value = '';
@@ -112,17 +114,17 @@ export default function LeaseApplication() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 space-y-10">
       <div>
-        <h1 className="text-2xl font-bold">Lease application</h1>
+        <h1 className="text-2xl font-bold">{t('Lease application')}</h1>
         <p className="text-slate-600">
-          Fill out the form below. We'll review your application and get back to you.
+          {t('Fill out the form below. We\'ll review your application and get back to you.')}
         </p>
       </div>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="text-lg font-semibold mb-4">Lease contact form</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('Lease contact form')}</h2>
         <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
           <div className="field">
-            <label>Full name</label>
+            <label>{t('Full name')}</label>
             <input
               required
               value={form.full_name}
@@ -130,7 +132,7 @@ export default function LeaseApplication() {
             />
           </div>
           <div className="field">
-            <label>Company</label>
+            <label>{t('Company')}</label>
             <input
               value={form.company}
               onChange={(e) => setForm({ ...form, company: e.target.value })}
@@ -138,14 +140,14 @@ export default function LeaseApplication() {
           </div>
 
           <div className="field">
-            <label>DOT number</label>
+            <label>{t('DOT number')}</label>
             <input
               value={form.dot_number}
               onChange={(e) => setForm({ ...form, dot_number: e.target.value })}
             />
           </div>
           <div className="field">
-            <label>MC number</label>
+            <label>{t('MC number')}</label>
             <input
               value={form.mc_number}
               onChange={(e) => setForm({ ...form, mc_number: e.target.value })}
@@ -153,19 +155,19 @@ export default function LeaseApplication() {
           </div>
 
           <div className="field">
-            <label>Trailer type</label>
+            <label>{t('Trailer type')}</label>
             <select
               value={form.trailer_type}
               onChange={(e) => setForm({ ...form, trailer_type: e.target.value })}
             >
-              <option value="">Choose trailer type…</option>
-              {TRAILER_TYPES.map((t) => (
-                <option key={t} value={t}>{t}</option>
+              <option value="">{t('Choose trailer type…')}</option>
+              {TRAILER_TYPES.map((type) => (
+                <option key={type} value={type}>{t(type)}</option>
               ))}
             </select>
           </div>
           <div className="field">
-            <label>Quantity</label>
+            <label>{t('Quantity')}</label>
             <input
               type="number"
               min="1"
@@ -175,7 +177,7 @@ export default function LeaseApplication() {
           </div>
 
           <div className="field">
-            <label>Phone</label>
+            <label>{t('Phone')}</label>
             <input
               type="tel"
               value={form.phone}
@@ -183,7 +185,7 @@ export default function LeaseApplication() {
             />
           </div>
           <div className="field">
-            <label>Email</label>
+            <label>{t('Email')}</label>
             <input
               type="email"
               value={form.email}
@@ -193,25 +195,25 @@ export default function LeaseApplication() {
 
           <div className="sm:col-span-2 pt-2 border-t border-slate-200 mt-2">
             <p className="text-sm font-medium text-slate-700 mb-3">
-              Upload supporting documents (PDF or image, max 8 MB each)
+              {t('Upload supporting documents (PDF or image, max 8 MB each)')}
             </p>
             <div className="grid gap-3 sm:grid-cols-3">
               <FileField
-                label="Driver's license"
+                label={t("Driver's license")}
                 fileName={form.drivers_license_name}
                 inputRef={dlRef}
                 onChange={() => pickFile('drivers_license_data', 'drivers_license_name', dlRef)}
                 onClear={() => clearFile('drivers_license_data', 'drivers_license_name', dlRef)}
               />
               <FileField
-                label="Articles of incorporation"
+                label={t('Articles of incorporation')}
                 fileName={form.articles_name}
                 inputRef={articlesRef}
                 onChange={() => pickFile('articles_data', 'articles_name', articlesRef)}
                 onClear={() => clearFile('articles_data', 'articles_name', articlesRef)}
               />
               <FileField
-                label="EIN number"
+                label={t('EIN number')}
                 fileName={form.ein_name}
                 inputRef={einRef}
                 onChange={() => pickFile('ein_data', 'ein_name', einRef)}
@@ -229,7 +231,7 @@ export default function LeaseApplication() {
               onChange={(e) => setForm({ ...form, agreed_to_terms: e.target.checked })}
             />
             <label htmlFor="agree" className="text-sm text-slate-700">
-              I agree to the terms of service and confirm the information provided is accurate.
+              {t('I agree to the terms of service and confirm the information provided is accurate.')}
             </label>
           </div>
 
@@ -238,37 +240,37 @@ export default function LeaseApplication() {
 
           <div className="sm:col-span-2">
             <button className="btn-primary" disabled={busy}>
-              {busy ? 'Submitting…' : 'Submit application'}
+              {busy ? t('Submitting…') : t('Submit application')}
             </button>
           </div>
         </form>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold mb-4">Your applications</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('Your applications')}</h2>
         <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
           <table className="min-w-full text-sm">
             <thead className="bg-slate-50 text-slate-700 text-left">
               <tr>
-                <th className="px-4 py-2">Submitted</th>
-                <th className="px-4 py-2">Trailer type</th>
-                <th className="px-4 py-2">Quantity</th>
-                <th className="px-4 py-2">Status</th>
-                <th className="px-4 py-2">Admin notes</th>
+                <th className="px-4 py-2">{t('Submitted')}</th>
+                <th className="px-4 py-2">{t('Trailer type')}</th>
+                <th className="px-4 py-2">{t('Quantity')}</th>
+                <th className="px-4 py-2">{t('Status')}</th>
+                <th className="px-4 py-2">{t('Admin notes')}</th>
               </tr>
             </thead>
             <tbody>
               {mine.map((a) => (
                 <tr key={a.id} className="border-t border-slate-200 align-top">
                   <td className="px-4 py-2">{new Date(a.created_at).toLocaleString()}</td>
-                  <td className="px-4 py-2">{a.trailer_type || '—'}</td>
+                  <td className="px-4 py-2">{a.trailer_type ? t(a.trailer_type) : '—'}</td>
                   <td className="px-4 py-2">{a.quantity ?? '—'}</td>
                   <td className="px-4 py-2"><StatusBadge status={a.status} /></td>
                   <td className="px-4 py-2 text-slate-600">{a.admin_notes || '—'}</td>
                 </tr>
               ))}
               {mine.length === 0 && (
-                <tr><td className="px-4 py-6 text-slate-500" colSpan={5}>No applications yet.</td></tr>
+                <tr><td className="px-4 py-6 text-slate-500" colSpan={5}>{t('No applications yet.')}</td></tr>
               )}
             </tbody>
           </table>
@@ -279,6 +281,7 @@ export default function LeaseApplication() {
 }
 
 function FileField({ label, fileName, inputRef, onChange, onClear }) {
+  const t = useT();
   return (
     <div className="rounded-lg border border-slate-200 p-3 flex flex-col gap-2">
       <p className="text-xs font-medium text-slate-600">{label}</p>
@@ -297,7 +300,7 @@ function FileField({ label, fileName, inputRef, onChange, onClear }) {
         <div className="flex items-center justify-between text-xs">
           <span className="truncate text-slate-700" title={fileName}>{fileName}</span>
           <button type="button" onClick={onClear} className="text-red-600 hover:underline">
-            Remove
+            {t('Remove')}
           </button>
         </div>
       )}

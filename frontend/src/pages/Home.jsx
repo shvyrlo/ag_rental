@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useT } from '../i18n/i18n.jsx';
 import { useInView } from '../lib/useInView.js';
 import stepDeckImg from '../assets/trailers/step-deck.png';
 import conestogaImg from '../assets/trailers/conestoga.png';
@@ -114,6 +115,7 @@ const PROCESS = [
 ];
 
 export default function Home() {
+  const t = useT();
   const { user } = useAuth();
   const [tab, setTab] = useState('trailers');
 
@@ -152,47 +154,45 @@ export default function Home() {
 
         <div className="relative mx-auto max-w-6xl px-4 py-24 sm:py-32 lg:py-40">
           <p className="eyebrow text-accent-300 animate-enter-up">
-            Truck &amp; Trailer Rental
+            {t('Truck & Trailer Rental')}
           </p>
 
           <h1 className="mt-8 font-display text-5xl sm:text-7xl lg:text-[88px] font-semibold leading-[1.02]">
-            <span className="block animate-enter-up stagger-1">Honest rates.</span>
-            <span className="block animate-enter-up stagger-2">Flexible plans.</span>
+            <span className="block animate-enter-up stagger-1">{t('Honest rates.')}</span>
+            <span className="block animate-enter-up stagger-2">{t('Flexible plans.')}</span>
             <span className="block animate-enter-up stagger-3">
-              <span className="font-display-italic text-brand-400">Real trucks,</span>{' '}
-              <span className="font-display-italic text-brand-400">ready&nbsp;today.</span>
+              <span className="font-display-italic text-brand-400">{t('Real trucks,')}</span>{' '}
+              <span className="font-display-italic text-brand-400">{t('ready today.')}</span>
             </span>
           </h1>
 
           <p className="mt-8 max-w-xl text-lg text-slate-300 leading-relaxed animate-enter-up stagger-4">
-            A DOT-ready fleet of late-model trucks and trailers waiting in
-            Channahon, Illinois — backed by a repair shop and a team that
-            answers the phone.
+            {t('A DOT-ready fleet of late-model trucks and trailers waiting in Channahon, Illinois — backed by a repair shop and a team that answers the phone.')}
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-3 animate-enter-up stagger-5">
             <a href="tel:+16308539348" className="btn-primary text-base px-5 py-2.5">
-              Call (630) 853-9348
+              {t('Call (630) 853-9348')}
             </a>
             <Link to={applyHref} className="btn-secondary text-base px-5 py-2.5 link-arrow">
-              Get a quote <span className="arrow">→</span>
+              {t('Get a quote')} <span className="arrow">→</span>
             </Link>
             {user && (
               <Link
                 to={dashboardHref}
                 className="ml-2 text-sm text-slate-300 hover:text-white underline-offset-4 hover:underline"
               >
-                Go to dashboard
+                {t('Go to dashboard')}
               </Link>
             )}
           </div>
 
           {/* Credibility strip */}
           <dl className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-3xl border-t border-white/10 pt-8 animate-enter-fade stagger-6">
-            <Stat kicker="Fleet" value="2024–2026" />
-            <Stat kicker="Based" value="Channahon, IL" />
-            <Stat kicker="Deposit from" value="$1,500" />
-            <Stat kicker="Plans" value="Weekly / monthly" />
+            <Stat kicker={t('Fleet')} value="2024–2026" />
+            <Stat kicker={t('Based')} value="Channahon, IL" />
+            <Stat kicker={t('Deposit from')} value="$1,500" />
+            <Stat kicker={t('Plans')} value={t('Weekly / monthly')} />
           </dl>
         </div>
       </section>
@@ -202,17 +202,17 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-4 py-24 lg:py-28">
           <Reveal>
             <div>
-              <p className="eyebrow text-brand-700">Our</p>
+              <p className="eyebrow text-brand-700">{t('Our')}</p>
               <div className="mt-5 flex flex-wrap items-end gap-6">
                 <h2 className="font-display text-5xl sm:text-6xl font-semibold text-slate-900 leading-[1.02]">
-                  Rental Fleet.
+                  {t('Rental Fleet.')}
                 </h2>
                 <div className="inline-flex rounded-full border border-slate-300 bg-white p-2 shadow-sm">
                   <TabButton active={tab === 'trucks'} onClick={() => setTab('trucks')}>
-                    Trucks
+                    {t('Trucks')}
                   </TabButton>
                   <TabButton active={tab === 'trailers'} onClick={() => setTab('trailers')}>
-                    Trailers
+                    {t('Trailers')}
                   </TabButton>
                 </div>
               </div>
@@ -233,37 +233,34 @@ export default function Home() {
       <section id="difference" className="bg-slate-50 border-y border-slate-200">
         <div className="mx-auto max-w-6xl px-4 py-24 lg:py-28 grid gap-14 lg:gap-20 lg:grid-cols-12">
           <Reveal className="lg:col-span-5">
-            <p className="eyebrow text-brand-700">The AG</p>
+            <p className="eyebrow text-brand-700">{t('The AG')}</p>
             <h2 className="mt-5 font-display text-5xl sm:text-6xl font-semibold text-slate-900 leading-[1.02]">
-              Difference.
+              {t('Difference.')}
             </h2>
             <p className="mt-8 text-lg text-slate-600 leading-relaxed">
-              We built our rental service to be the partner we always wanted —
-              focused on what matters: <em className="font-display-italic text-slate-900">quality</em>,{' '}
-              <em className="font-display-italic text-slate-900">flexibility</em>, and{' '}
-              <em className="font-display-italic text-slate-900">simplicity</em>.
+              {t('We built our rental service to be the partner we always wanted — focused on what matters:')}{' '}
+              <em className="font-display-italic text-slate-900">{t('quality')}</em>,{' '}
+              <em className="font-display-italic text-slate-900">{t('flexibility')}</em>, {t('and')}{' '}
+              <em className="font-display-italic text-slate-900">{t('simplicity')}</em>.
             </p>
             <p className="mt-5 text-slate-600 leading-relaxed">
-              We're here to make your life on the road easier. That's why we
-              focus on impeccable quality with our serviced 2024–2026 fleet,
-              offer custom plans at fair rates, and keep the process fast and
-              friendly from our yard in Channahon, Illinois.
+              {t('We\'re here to make your life on the road easier. That\'s why we focus on impeccable quality with our serviced 2024–2026 fleet, offer custom plans at fair rates, and keep the process fast and friendly from our yard in Channahon, Illinois.')}
             </p>
             <Link to={applyHref} className="mt-10 inline-flex btn-primary text-base px-5 py-2.5 link-arrow">
-              Get a quote <span className="arrow">→</span>
+              {t('Get a quote')} <span className="arrow">→</span>
             </Link>
           </Reveal>
 
           <Reveal delay={120} className="lg:col-span-7 self-start">
             <div className="grid sm:grid-cols-2 gap-px bg-slate-200 rounded-2xl overflow-hidden ring-1 ring-slate-200">
-              <DifferenceCard n="01" title="Quality"
-                body="Impeccable, serviced 2024–2026 equipment — in and out of our own shop." />
-              <DifferenceCard n="02" title="Flexibility"
-                body="Custom plans. Weekly and monthly terms. Honest, straightforward rates." />
-              <DifferenceCard n="03" title="Simplicity"
-                body="Fast, friendly from day one. A team that answers the phone." />
-              <DifferenceCard n="04" title="Local"
-                body="Channahon, IL — a DOT-ready yard ten minutes from I-55 and I-80." />
+              <DifferenceCard n="01" title={t('Quality')}
+                body={t('Impeccable, serviced 2024–2026 equipment — in and out of our own shop.')} />
+              <DifferenceCard n="02" title={t('Flexibility')}
+                body={t('Custom plans. Weekly and monthly terms. Honest, straightforward rates.')} />
+              <DifferenceCard n="03" title={t('Simplicity')}
+                body={t('Fast, friendly from day one. A team that answers the phone.')} />
+              <DifferenceCard n="04" title={t('Local')}
+                body={t('Channahon, IL — a DOT-ready yard ten minutes from I-55 and I-80.')} />
             </div>
           </Reveal>
         </div>
@@ -274,14 +271,13 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-4 py-24 lg:py-28">
           <Reveal>
             <div className="max-w-3xl">
-              <p className="eyebrow text-brand-700">Rental</p>
+              <p className="eyebrow text-brand-700">{t('Rental')}</p>
               <h2 className="mt-5 font-display text-5xl sm:text-6xl font-semibold text-slate-900 leading-[1.02]">
-                Pricing &amp;{' '}
-                <span className="font-display-italic text-brand-600">Process.</span>
+                {t('Pricing &')}{' '}
+                <span className="font-display-italic text-brand-600">{t('Process.')}</span>
               </h2>
               <p className="mt-6 text-lg text-slate-600 leading-relaxed">
-                Six steps from application to keys-in-hand. Most customers
-                finish the process inside a week.
+                {t('Six steps from application to keys-in-hand. Most customers finish the process inside a week.')}
               </p>
             </div>
           </Reveal>
@@ -294,19 +290,19 @@ export default function Home() {
                     {step.n}
                   </div>
                   <h3 className="mt-3 font-display text-2xl font-semibold text-slate-900">
-                    {step.title}
+                    {t(step.title)}
                   </h3>
                   <p className="mt-3 text-slate-600 leading-relaxed">
                     {step.title === 'Application' ? (
                       <>
-                        Fill out our{' '}
+                        {t('Fill out our')}{' '}
                         <Link to={applyHref}
                           className="text-brand-700 underline decoration-brand-300 underline-offset-2 hover:decoration-brand-700">
-                          rental application
+                          {t('rental application')}
                         </Link>
                         .
                       </>
-                    ) : step.body}
+                    ) : t(step.body)}
                   </p>
                 </div>
               </Reveal>
@@ -315,18 +311,12 @@ export default function Home() {
 
           <Reveal delay={120}>
             <div className="mt-16 rounded-2xl border border-accent-200 bg-accent-50/60 p-8">
-              <p className="eyebrow text-accent-700">Insurance</p>
+              <p className="eyebrow text-accent-700">{t('Insurance')}</p>
               <p className="mt-4 font-display text-2xl font-semibold text-slate-900 max-w-3xl leading-snug">
-                Auto Liability: $1 Million; Physical Damage required.
+                {t('Auto Liability: $1 Million; Physical Damage required.')}
               </p>
               <p className="mt-4 text-slate-700 leading-relaxed max-w-3xl">
-                Under <em>Description of Vehicles</em>, the year, make &amp; model,
-                VIN, and value must be added. List{' '}
-                <strong className="text-slate-900">
-                  AG Truck &amp; Trailer Rental, 24307 Riverside Dr, Channahon, IL 60410
-                </strong>{' '}
-                as <span className="font-medium">loss payee</span> /{' '}
-                <span className="font-medium">certificate holder</span> and additional insured.
+                {t('Under Description of Vehicles, the year, make & model, VIN, and value must be added. List AG Truck & Trailer Rental, 24307 Riverside Dr, Channahon, IL 60410 as loss payee / certificate holder and additional insured.')}
               </p>
             </div>
           </Reveal>
@@ -337,28 +327,25 @@ export default function Home() {
       <section id="lease" className="bg-white">
         <div className="mx-auto max-w-3xl px-4 py-24 lg:py-28 text-center">
           <Reveal>
-            <p className="eyebrow text-brand-700">Lease</p>
+            <p className="eyebrow text-brand-700">{t('Lease')}</p>
             <h2 className="mt-6 font-display text-5xl sm:text-6xl font-semibold text-slate-900 leading-[1.02]">
-              Ready to <span className="font-display-italic text-brand-600">roll?</span>
+              {t('Ready to')} <span className="font-display-italic text-brand-600">{t('roll?')}</span>
             </h2>
             <p className="mt-8 text-lg text-slate-600 leading-relaxed">
-              Submit a lease application online — pick a trailer type, upload
-              your EIN, Articles of Incorporation, and driver's license, and
-              we'll take it from there.
+              {t('Submit a lease application online — pick a trailer type, upload your EIN, Articles of Incorporation, and driver\'s license, and we\'ll take it from there.')}
             </p>
           </Reveal>
           <Reveal delay={120}>
             <div className="mt-10 flex flex-wrap justify-center gap-3">
               <Link to={applyHref} className="btn-primary text-base px-5 py-2.5 link-arrow">
-                Submit application <span className="arrow">→</span>
+                {t('Submit application')} <span className="arrow">→</span>
               </Link>
               <a href="tel:+16308539348" className="btn-secondary text-base px-5 py-2.5">
-                Call (630) 853-9348
+                {t('Call (630) 853-9348')}
               </a>
             </div>
             <p className="mt-8 text-xs text-slate-500">
-              By submitting this application, you acknowledge and agree to our
-              Terms of Service and Privacy Policy.
+              {t('By submitting this application, you acknowledge and agree to our Terms of Service and Privacy Policy.')}
             </p>
           </Reveal>
         </div>
@@ -414,6 +401,7 @@ function TabButton({ active, onClick, children }) {
 }
 
 function FleetCard({ unit, applyHref }) {
+  const t = useT();
   // Big trailer image stays visible; click anywhere on the card to reveal
   // the bulleted description, which slides up from the bottom edge.
   const [open, setOpen] = useState(false);
@@ -441,7 +429,7 @@ function FleetCard({ unit, applyHref }) {
                             flex items-center justify-center overflow-hidden">
               <img
                 src={unit.image}
-                alt={`${unit.name} trailer`}
+                alt={`${t(unit.name)} trailer`}
                 className="h-full w-full object-contain p-6 transition-transform
                            duration-500 group-hover:scale-[1.03]"
                 loading="lazy"
@@ -453,7 +441,7 @@ function FleetCard({ unit, applyHref }) {
           <div className="flex-1 min-w-0 p-6 sm:p-7 flex flex-col justify-center">
             <div className="flex items-baseline justify-between gap-4">
               <h3 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
-                {unit.name}
+                {t(unit.name)}
               </h3>
               <span className="text-xs uppercase tracking-wider text-slate-500 whitespace-nowrap">
                 {unit.years}
@@ -463,10 +451,10 @@ function FleetCard({ unit, applyHref }) {
             <div className="mt-4 flex items-baseline justify-between gap-4">
               <div className="flex items-baseline gap-2">
                 <div className="font-display text-3xl sm:text-4xl font-semibold text-slate-900 leading-none">
-                  {unit.price}
+                  {t(unit.price)}
                 </div>
                 {unit.unit && (
-                  <div className="text-sm text-slate-500">{unit.unit}</div>
+                  <div className="text-sm text-slate-500">{t(unit.unit)}</div>
                 )}
               </div>
               {/* Chevron — rotates 180° when expanded */}
@@ -485,10 +473,10 @@ function FleetCard({ unit, applyHref }) {
               </svg>
             </div>
             {unit.deposit && (
-              <div className="mt-1 text-xs text-slate-500">{unit.deposit}</div>
+              <div className="mt-1 text-xs text-slate-500">{t(unit.deposit)}</div>
             )}
             <div className="mt-3 text-xs text-slate-400 italic">
-              {open ? 'Click to close' : 'Click for details →'}
+              {open ? t('Click to close') : t('Click for details →')}
             </div>
           </div>
         </div>
@@ -509,7 +497,7 @@ function FleetCard({ unit, applyHref }) {
               {unit.bullets.map((b) => (
                 <li key={b} className="flex gap-2.5">
                   <span className="text-brand-500 mt-1 select-none">—</span>
-                  <span className="leading-relaxed">{b}</span>
+                  <span className="leading-relaxed">{t(b)}</span>
                 </li>
               ))}
             </ul>
@@ -519,7 +507,7 @@ function FleetCard({ unit, applyHref }) {
               className="link-arrow mt-6 inline-block text-sm font-medium
                          text-brand-700 hover:text-brand-800 underline-offset-4 hover:underline"
             >
-              Apply now <span className="arrow">→</span>
+              {t('Apply now')} <span className="arrow">→</span>
             </Link>
           </div>
         </div>

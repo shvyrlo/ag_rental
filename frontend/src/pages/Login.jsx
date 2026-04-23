@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useT } from '../i18n/i18n.jsx';
 
 export default function Login() {
+  const t = useT();
   const { login, loading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,12 +30,12 @@ export default function Login() {
   return (
     <div className="mx-auto max-w-md px-4 py-16">
       <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-slate-900">Log in</h1>
-        <p className="mt-1 text-sm text-slate-600">Welcome back.</p>
+        <h1 className="text-2xl font-bold text-slate-900">{t('Log in')}</h1>
+        <p className="mt-1 text-sm text-slate-600">{t('Welcome back.')}</p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div className="field">
-            <label>Email</label>
+            <label>{t('Email')}</label>
             <input
               type="email"
               required
@@ -43,7 +45,7 @@ export default function Login() {
             />
           </div>
           <div className="field">
-            <label>Password</label>
+            <label>{t('Password')}</label>
             <input
               type="password"
               required
@@ -54,14 +56,14 @@ export default function Login() {
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? 'Logging in…' : 'Log in'}
+            {loading ? t('Logging in…') : t('Log in')}
           </button>
         </form>
 
         <p className="mt-4 text-sm text-slate-600">
-          No account yet?{' '}
+          {t('No account yet?')}{' '}
           <Link to="/register" className="text-brand-700 hover:underline">
-            Register
+            {t('Register')}
           </Link>
         </p>
       </div>

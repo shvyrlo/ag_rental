@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api.js';
 import StatusBadge from '../../components/StatusBadge.jsx';
+import { useT } from '../../i18n/i18n.jsx';
 
 // Stock images we can match an equipment row against by keyword.
 // Equipment rows don't carry an image URL in the DB (yet), so we infer the
@@ -40,6 +41,7 @@ function pickImage(eq) {
 }
 
 export default function RentEquipment() {
+  const t = useT();
   const [equipment, setEquipment] = useState([]);
   const [rentals, setRentals] = useState([]);
   const [kindFilter, setKindFilter] = useState('all'); // 'all' | 'trucks' | 'trailers'
@@ -76,14 +78,14 @@ export default function RentEquipment() {
   const typeGroups = useMemo(() => {
     const buckets = new Map();
     for (const eq of available) {
-      const t = pickType(eq);
-      const key = t?.key || `other:${(eq.category || 'Other').toLowerCase()}`;
+      const tm = pickType(eq);
+      const key = tm?.key || `other:${(eq.category || 'Other').toLowerCase()}`;
       if (!buckets.has(key)) {
         buckets.set(key, {
           key,
-          label: t?.label || eq.category || 'Other equipment',
-          kind: t?.kind || 'other',
-          img: t?.img || defaultImg,
+          label: tm?.label || eq.category || 'Other equipment',
+          kind: tm?.kind || 'other',
+          img: tm?.img || defaultImg,
           units: [],
         });
       }
@@ -122,7 +124,7 @@ export default function RentEquipment() {
     e.preventDefault();
     setError(null);
     if (!selected) {
-      setError('Pick a unit above.');
+      setError(t('Pick a unit above.'));
       return;
     }
     setBusy(true);
@@ -153,31 +155,31 @@ export default function RentEquipment() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 space-y-10">
       <div>
-        <h1 className="text-2xl font-bold">Rent equipment</h1>
-        <p className="text-slate-600">Pick an equipment type, then choose a unit and dates.</p>
+        <h1 className="text-2xl font-bold">{t('Rent equipment')}</h1>
+        <p className="text-slate-600">{t('Pick an equipment type, then choose a unit and dates.')}</p>
       </div>
 
       <section>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Available fleet</h2>
+          <h2 className="text-lg font-semibold">{t('Available fleet')}</h2>
           <div
             role="tablist"
-            aria-label="Filter by vehicle kind"
+            aria-label={t('Filter by vehicle kind')}
             className="inline-flex rounded-lg border border-slate-200 bg-white p-1 text-sm"
           >
             {[
               { key: 'all', label: 'All', count: totalCount },
               { key: 'trucks', label: 'Trucks', count: truckCount },
               { key: 'trailers', label: 'Trailers', count: trailerCount },
-            ].map((t) => {
-              const active = kindFilter === t.key;
+            ].map((tab) => {
+              const active = kindFilter === tab.key;
               return (
                 <button
-                  key={t.key}
+                  key={tab.key}
                   type="button"
                   role="tab"
                   aria-selected={active}
-                  onClick={() => { setKindFilter(t.key); setExpandedTypeKey(null); }}
+                  onClick={() => { setKindFilter(tab.key); setExpandedTypeKey(null); }}
                   className={
                     'px-3 py-1.5 rounded-md font-medium transition ' +
                     (active
@@ -185,9 +187,9 @@ export default function RentEquipment() {
                       : 'text-slate-600 hover:bg-slate-100')
                   }
                 >
-                  {t.label}
+                  {t(tab.label)}
                   <span className={'ml-1.5 text-xs ' + (active ? 'text-white/80' : 'text-slate-400')}>
-                    {t.count}
+                    {tab.count}
                   </span>
                 </button>
               );
@@ -197,8 +199,10 @@ export default function RentEquipment() {
         {visibleGroups.length === 0 ? (
           <p className="text-sm text-slate-500">
             {typeGroups.length === 0
-              ? 'No equipment is available right now.'
-              : `No ${kindFilter === 'trucks' ? 'trucks' : 'trailers'} are available right now.`}
+              ? t('No equipment is available right now.')
+              : (kindFilter === 'trucks'
+                  ? t('No trucks are available right now.')
+                  : t('No trailers are available right now.'))}
           </p>
         ) : (
           <div className="space-y-4">
@@ -226,26 +230,28 @@ export default function RentEquipment() {
                     <div className="w-full h-52 sm:w-[26rem] sm:h-64 shrink-0 bg-slate-50 rounded-md border border-slate-200 flex items-center justify-center overflow-hidden">
                       <img
                         src={group.img}
-                        alt={group.label}
+                        alt={t(group.label)}
                         className="max-h-full max-w-full object-contain"
                         loading="lazy"
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-xl sm:text-2xl text-slate-900 truncate">{group.label}</p>
+                      <p className="font-semibold text-xl sm:text-2xl text-slate-900 truncate">{t(group.label)}</p>
                       <p className="mt-1 text-base text-slate-600">
-                        {group.units.length} {group.units.length === 1 ? 'unit' : 'units'} available
+                        {group.units.length}{' '}
+                        {group.units.length === 1 ? t('unit') : t('units')}{' '}
+                        {t('available')}
                         {startingRate !== null && (
                           <>
                             {' · '}
                             <span className="text-slate-900 font-medium">
-                              from ${startingRate.toFixed(0)}/mo
+                              {t('from')} ${startingRate.toFixed(0)}/{t('mo')}
                             </span>
                           </>
                         )}
                       </p>
                       <p className="mt-2 text-sm font-medium text-brand-700">
-                        {isOpen ? 'Click to collapse' : 'Click to see available units'}
+                        {isOpen ? t('Click to collapse') : t('Click to see available units')}
                       </p>
                     </div>
                     <svg
@@ -267,34 +273,34 @@ export default function RentEquipment() {
                             <li key={u.id} className="p-4 flex items-start gap-4">
                               <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                                  <p className="font-semibold text-slate-900">{u.name}</p>
+                                  <p className="font-semibold text-slate-900">{t(u.name)}</p>
                                   {u.unit_number && (
-                                    <span className="text-xs font-mono text-slate-500">Unit {u.unit_number}</span>
+                                    <span className="text-xs font-mono text-slate-500">{t('Unit')} {u.unit_number}</span>
                                   )}
                                 </div>
                                 <p className="mt-1 text-sm text-slate-700">
                                   ${Number(u.monthly_rate).toFixed(2)}
-                                  <span className="text-slate-500">/month</span>
+                                  <span className="text-slate-500">/{t('month')}</span>
                                 </p>
                                 {u.description && (
                                   <p className="mt-1 text-xs text-slate-600">{u.description}</p>
                                 )}
                                 <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600 sm:grid-cols-3">
                                   {u.category && (
-                                    <div><dt className="inline text-slate-500">Category: </dt><dd className="inline">{u.category}</dd></div>
+                                    <div><dt className="inline text-slate-500">{t('Category:')} </dt><dd className="inline">{t(u.category)}</dd></div>
                                   )}
                                   {u.year && (
-                                    <div><dt className="inline text-slate-500">Year: </dt><dd className="inline">{u.year}</dd></div>
+                                    <div><dt className="inline text-slate-500">{t('Year:')} </dt><dd className="inline">{u.year}</dd></div>
                                   )}
                                   {u.make && (
-                                    <div><dt className="inline text-slate-500">Make: </dt><dd className="inline">{u.make}</dd></div>
+                                    <div><dt className="inline text-slate-500">{t('Make:')} </dt><dd className="inline">{u.make}</dd></div>
                                   )}
                                   {u.model && (
-                                    <div><dt className="inline text-slate-500">Model: </dt><dd className="inline">{u.model}</dd></div>
+                                    <div><dt className="inline text-slate-500">{t('Model:')} </dt><dd className="inline">{u.model}</dd></div>
                                   )}
                                   {u.vin && (
                                     <div className="col-span-2 sm:col-span-3">
-                                      <dt className="inline text-slate-500">VIN: </dt>
+                                      <dt className="inline text-slate-500">{t('VIN:')} </dt>
                                       <dd className="inline font-mono">{u.vin}</dd>
                                     </div>
                                   )}
@@ -310,7 +316,7 @@ export default function RentEquipment() {
                                     : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100')
                                 }
                               >
-                                {isSelected ? 'Selected' : 'Select'}
+                                {isSelected ? t('Selected') : t('Select')}
                               </button>
                             </li>
                           );
@@ -334,18 +340,18 @@ export default function RentEquipment() {
               className="w-24 h-16 object-contain bg-slate-50 rounded-md border border-slate-200 shrink-0"
             />
             <div className="min-w-0">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Booking</p>
-              <p className="font-semibold text-slate-900 truncate">{selected.name}</p>
+              <p className="text-xs uppercase tracking-wide text-slate-500">{t('Booking')}</p>
+              <p className="font-semibold text-slate-900 truncate">{t(selected.name)}</p>
               <p className="text-sm text-slate-600">
-                ${Number(selected.monthly_rate).toFixed(2)}/month
-                {selected.unit_number ? ` · Unit ${selected.unit_number}` : ''}
+                ${Number(selected.monthly_rate).toFixed(2)}/{t('month')}
+                {selected.unit_number ? ` · ${t('Unit')} ${selected.unit_number}` : ''}
               </p>
             </div>
           </div>
 
           <form onSubmit={handleRent} className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="field">
-              <label>Start date</label>
+              <label>{t('Start date')}</label>
               <input
                 type="date"
                 required
@@ -354,7 +360,7 @@ export default function RentEquipment() {
               />
             </div>
             <div className="field">
-              <label>End date</label>
+              <label>{t('End date')}</label>
               <input
                 type="date"
                 required
@@ -365,14 +371,14 @@ export default function RentEquipment() {
             {error && <p className="sm:col-span-2 text-sm text-red-600">{error}</p>}
             <div className="sm:col-span-2 flex items-center gap-3 pt-1">
               <button className="btn-primary" disabled={busy}>
-                {busy ? 'Booking…' : 'Book rental'}
+                {busy ? t('Booking…') : t('Book rental')}
               </button>
               <button
                 type="button"
                 className="btn-secondary"
                 onClick={() => { setSelectedId(null); setStartDate(''); setEndDate(''); setError(null); }}
               >
-                Cancel
+                {t('Cancel')}
               </button>
             </div>
           </form>
@@ -384,23 +390,23 @@ export default function RentEquipment() {
       )}
 
       <section>
-        <h2 className="text-lg font-semibold mb-4">Your rentals</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('Your rentals')}</h2>
         <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
           <table className="min-w-full text-sm">
             <thead className="bg-slate-50 text-slate-700 text-left">
               <tr>
-                <th className="px-4 py-2">Unit #</th>
-                <th className="px-4 py-2">Equipment</th>
-                <th className="px-4 py-2">Dates</th>
-                <th className="px-4 py-2">Total</th>
-                <th className="px-4 py-2">Status</th>
+                <th className="px-4 py-2">{t('Unit #')}</th>
+                <th className="px-4 py-2">{t('Equipment')}</th>
+                <th className="px-4 py-2">{t('Dates')}</th>
+                <th className="px-4 py-2">{t('Total')}</th>
+                <th className="px-4 py-2">{t('Status')}</th>
               </tr>
             </thead>
             <tbody>
               {rentals.map((r) => (
                 <tr key={r.id} className="border-t border-slate-200">
                   <td className="px-4 py-2 font-mono text-slate-700">{r.equipment_unit_number || '—'}</td>
-                  <td className="px-4 py-2">{r.equipment_name}</td>
+                  <td className="px-4 py-2">{t(r.equipment_name)}</td>
                   <td className="px-4 py-2">
                     {new Date(r.start_date).toLocaleDateString()} –{' '}
                     {new Date(r.end_date).toLocaleDateString()}
@@ -410,7 +416,7 @@ export default function RentEquipment() {
                 </tr>
               ))}
               {rentals.length === 0 && (
-                <tr><td className="px-4 py-6 text-slate-500" colSpan={5}>No rentals yet.</td></tr>
+                <tr><td className="px-4 py-6 text-slate-500" colSpan={5}>{t('No rentals yet.')}</td></tr>
               )}
             </tbody>
           </table>

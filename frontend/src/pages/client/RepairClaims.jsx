@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { compressImage, renameToJpg, MAX_SOURCE_BYTES } from '../../lib/imageCompress.js';
 import StatusBadge from '../../components/StatusBadge.jsx';
+import { useT } from '../../i18n/i18n.jsx';
 
 // Two ways a client can open a claim:
 //   'road' → stuck on the road, needs a roadside fix
@@ -29,6 +30,7 @@ const EMPTY_FORM = {
 };
 
 export default function ClientRepairClaims() {
+  const tr = useT();
   const [claims, setClaims] = useState([]);
   const [rentals, setRentals] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -92,8 +94,8 @@ export default function ClientRepairClaims() {
     setBusy(true);
     try {
       const rental = rentals.find(r => String(r.id) === String(form.rental_id));
-      if (!rental) throw new Error('Pick one of your rentals');
-      if (!form.before_photo) throw new Error('A photo of the problem is required');
+      if (!rental) throw new Error(tr('Pick one of your rentals'));
+      if (!form.before_photo) throw new Error(tr('A photo of the problem is required'));
       await api('/repair-claims', {
         method: 'POST',
         body: {
@@ -155,7 +157,7 @@ export default function ClientRepairClaims() {
   async function uploadAfterPhoto(claimId) {
     const staged = afterPhotoById[claimId];
     if (!staged) {
-      setError('Pick a photo first.');
+      setError(tr('Pick a photo first.'));
       return;
     }
     try {
@@ -174,37 +176,37 @@ export default function ClientRepairClaims() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 space-y-10">
       <div>
-        <h1 className="text-2xl font-bold">Repair claims</h1>
-        <p className="text-slate-600">Report a problem with equipment you rented.</p>
+        <h1 className="text-2xl font-bold">{tr('Repair claims')}</h1>
+        <p className="text-slate-600">{tr('Report a problem with equipment you rented.')}</p>
       </div>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="text-lg font-semibold mb-4">File a claim</h2>
+        <h2 className="text-lg font-semibold mb-4">{tr('File a claim')}</h2>
         <form onSubmit={handleSubmit} className="grid gap-4">
           <div className="field">
-            <label>Rental</label>
+            <label>{tr('Rental')}</label>
             <select
               required
               value={form.rental_id}
               onChange={(e) => setForm({ ...form, rental_id: e.target.value })}
             >
-              <option value="">Select…</option>
+              <option value="">{tr('Select…')}</option>
               {rentals.map((r) => (
                 <option key={r.id} value={r.id}>
-                  #{r.id} — {r.equipment_name}
+                  #{r.id} — {tr(r.equipment_name)}
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-slate-700 mb-2">Repair type</p>
+            <p className="text-sm font-medium text-slate-700 mb-2">{tr('Repair type')}</p>
             <div className="grid gap-3 sm:grid-cols-2">
-              {REPAIR_TYPES.map((t) => {
-                const active = form.repair_type === t.value;
+              {REPAIR_TYPES.map((rt) => {
+                const active = form.repair_type === rt.value;
                 return (
                   <label
-                    key={t.value}
+                    key={rt.value}
                     className={
                       'rounded-lg border p-4 cursor-pointer flex gap-3 items-start transition ' +
                       (active
@@ -216,15 +218,15 @@ export default function ClientRepairClaims() {
                       type="radio"
                       name="repair_type"
                       className="mt-1"
-                      value={t.value}
+                      value={rt.value}
                       checked={active}
-                      onChange={() => setForm({ ...form, repair_type: t.value })}
+                      onChange={() => setForm({ ...form, repair_type: rt.value })}
                     />
                     <div>
                       <div className="font-medium text-slate-900">
-                        <span className="mr-1">{t.icon}</span>{t.label}
+                        <span className="mr-1">{rt.icon}</span>{tr(rt.label)}
                       </div>
-                      <div className="text-sm text-slate-600">{t.description}</div>
+                      <div className="text-sm text-slate-600">{tr(rt.description)}</div>
                     </div>
                   </label>
                 );
@@ -233,7 +235,7 @@ export default function ClientRepairClaims() {
           </div>
 
           <div className="field">
-            <label>What's wrong?</label>
+            <label>{tr('What\'s wrong?')}</label>
             <textarea
               rows={4}
               required
@@ -244,7 +246,7 @@ export default function ClientRepairClaims() {
 
           <div>
             <p className="text-sm font-medium text-slate-700 mb-2">
-              Photo of the problem (required)
+              {tr('Photo of the problem (required)')}
             </p>
             <div className="rounded-lg border border-slate-200 p-3 flex flex-col gap-2 max-w-md">
               {form.before_photo?.data ? (
@@ -256,7 +258,7 @@ export default function ClientRepairClaims() {
               ) : (
                 <div className="h-40 w-full rounded-md border border-dashed border-slate-300
                                 flex items-center justify-center text-xs text-slate-400">
-                  no photo yet
+                  {tr('no photo yet')}
                 </div>
               )}
               <input
@@ -280,14 +282,14 @@ export default function ClientRepairClaims() {
                   onClick={() => beforeCameraRef.current?.click()}
                   className="flex-1 rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
                 >
-                  Take photo
+                  {tr('Take photo')}
                 </button>
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
-                  Upload
+                  {tr('Upload')}
                 </button>
               </div>
               {form.before_photo?.name && (
@@ -296,7 +298,7 @@ export default function ClientRepairClaims() {
                     {form.before_photo.name}
                   </span>
                   <button type="button" onClick={clearBeforePhoto} className="text-red-600 hover:underline">
-                    Remove
+                    {tr('Remove')}
                   </button>
                 </div>
               )}
@@ -306,24 +308,24 @@ export default function ClientRepairClaims() {
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div>
             <button className="btn-primary" disabled={busy}>
-              {busy ? 'Submitting…' : 'Submit claim'}
+              {busy ? tr('Submitting…') : tr('Submit claim')}
             </button>
           </div>
         </form>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold mb-4">Your claims</h2>
+        <h2 className="text-lg font-semibold mb-4">{tr('Your claims')}</h2>
         <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
           <table className="min-w-full text-sm">
             <thead className="bg-slate-50 text-slate-700 text-left">
               <tr>
-                <th className="px-4 py-2">Equipment</th>
-                <th className="px-4 py-2">Type</th>
-                <th className="px-4 py-2">Description</th>
-                <th className="px-4 py-2">Photos</th>
-                <th className="px-4 py-2">Mechanic</th>
-                <th className="px-4 py-2">Status</th>
+                <th className="px-4 py-2">{tr('Equipment')}</th>
+                <th className="px-4 py-2">{tr('Type')}</th>
+                <th className="px-4 py-2">{tr('Description')}</th>
+                <th className="px-4 py-2">{tr('Photos')}</th>
+                <th className="px-4 py-2">{tr('Mechanic')}</th>
+                <th className="px-4 py-2">{tr('Status')}</th>
                 <th className="px-4 py-2"></th>
               </tr>
             </thead>
@@ -334,7 +336,7 @@ export default function ClientRepairClaims() {
                 return (
                   <Fragment key={c.id}>
                     <tr className="border-t border-slate-200 align-top">
-                      <td className="px-4 py-2">{c.equipment_name}</td>
+                      <td className="px-4 py-2">{tr(c.equipment_name)}</td>
                       <td className="px-4 py-2">
                         <RepairTypeBadge type={c.repair_type} />
                       </td>
@@ -346,7 +348,7 @@ export default function ClientRepairClaims() {
                             className="text-xs text-slate-700 hover:underline"
                             onClick={() => openClaimPhoto(c.id, 'before')}
                           >
-                            📷 Before
+                            📷 {tr('Before')}
                           </button>
                         ) : (
                           <span className="text-xs text-slate-400">—</span>
@@ -357,11 +359,11 @@ export default function ClientRepairClaims() {
                             className="text-xs text-emerald-700 hover:underline"
                             onClick={() => openClaimPhoto(c.id, 'after')}
                           >
-                            ✅ After
+                            ✅ {tr('After')}
                           </button>
                         ) : null}
                       </td>
-                      <td className="px-4 py-2">{c.mechanic_name || 'Unassigned'}</td>
+                      <td className="px-4 py-2">{c.mechanic_name || tr('Unassigned')}</td>
                       <td className="px-4 py-2"><StatusBadge status={c.status} /></td>
                       <td className="px-4 py-2 text-right">
                         {c.status !== 'rejected' && (
@@ -371,8 +373,8 @@ export default function ClientRepairClaims() {
                             onClick={() => setExpandedId(isOpen ? null : c.id)}
                           >
                             {isOpen
-                              ? 'Close'
-                              : (c.has_after_photo ? 'Replace after photo' : 'Add after photo')}
+                              ? tr('Close')
+                              : (c.has_after_photo ? tr('Replace after photo') : tr('Add after photo'))}
                           </button>
                         )}
                       </td>
@@ -382,7 +384,7 @@ export default function ClientRepairClaims() {
                         <td colSpan={7} className="px-4 py-4">
                           <div className="rounded-lg border border-slate-200 bg-white p-3 flex flex-col gap-2 max-w-md">
                             <p className="text-xs font-medium text-slate-600">
-                              Upload a photo showing the repaired equipment
+                              {tr('Upload a photo showing the repaired equipment')}
                             </p>
                             {stagedAfter?.data ? (
                               <img
@@ -393,7 +395,7 @@ export default function ClientRepairClaims() {
                             ) : (
                               <div className="h-32 w-full rounded-md border border-dashed border-slate-300
                                               flex items-center justify-center text-xs text-slate-400">
-                                no photo yet
+                                {tr('no photo yet')}
                               </div>
                             )}
                             <input
@@ -417,14 +419,14 @@ export default function ClientRepairClaims() {
                                 onClick={() => afterCameraRefs.current[c.id]?.click()}
                                 className="flex-1 rounded-md bg-slate-800 px-2 py-1 text-xs font-medium text-white hover:bg-slate-700"
                               >
-                                Take photo
+                                {tr('Take photo')}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => afterInputRefs.current[c.id]?.click()}
                                 className="flex-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
                               >
-                                Upload
+                                {tr('Upload')}
                               </button>
                             </div>
                             {stagedAfter?.name && (
@@ -437,7 +439,7 @@ export default function ClientRepairClaims() {
                                   onClick={() => clearAfterPhoto(c.id)}
                                   className="text-red-600 hover:underline"
                                 >
-                                  Remove
+                                  {tr('Remove')}
                                 </button>
                               </div>
                             )}
@@ -448,7 +450,7 @@ export default function ClientRepairClaims() {
                                 disabled={!stagedAfter}
                                 onClick={() => uploadAfterPhoto(c.id)}
                               >
-                                {c.has_after_photo ? 'Replace after photo' : 'Upload after photo'}
+                                {c.has_after_photo ? tr('Replace after photo') : tr('Upload after photo')}
                               </button>
                             </div>
                           </div>
@@ -459,7 +461,7 @@ export default function ClientRepairClaims() {
                 );
               })}
               {claims.length === 0 && (
-                <tr><td className="px-4 py-6 text-slate-500" colSpan={7}>No claims filed.</td></tr>
+                <tr><td className="px-4 py-6 text-slate-500" colSpan={7}>{tr('No claims filed.')}</td></tr>
               )}
             </tbody>
           </table>
@@ -472,13 +474,15 @@ export default function ClientRepairClaims() {
 }
 
 function RepairTypeBadge({ type }) {
+  const tr = useT();
   if (type === 'road') {
-    return <span className="inline-flex items-center rounded-full bg-red-100 text-red-800 px-2 py-0.5 text-xs">🚨 Road</span>;
+    return <span className="inline-flex items-center rounded-full bg-red-100 text-red-800 px-2 py-0.5 text-xs">🚨 {tr('Road')}</span>;
   }
-  return <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-800 px-2 py-0.5 text-xs">🔧 AG</span>;
+  return <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-800 px-2 py-0.5 text-xs">🔧 {tr('AG')}</span>;
 }
 
 function Lightbox({ photo, onClose }) {
+  const tr = useT();
   return (
     <div
       className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
@@ -489,16 +493,16 @@ function Lightbox({ photo, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between text-white text-sm mb-2">
-          <span>{photo.name || (photo.kind === 'after' ? 'After repair' : 'Problem photo')}</span>
+          <span>{photo.name || (photo.kind === 'after' ? tr('After repair') : tr('Problem photo'))}</span>
           <div className="space-x-3">
             <a
               href={photo.data}
               download={photo.name || `${photo.kind}-photo.jpg`}
               className="hover:underline"
             >
-              Download
+              {tr('Download')}
             </a>
-            <button type="button" onClick={onClose} className="hover:underline">Close</button>
+            <button type="button" onClick={onClose} className="hover:underline">{tr('Close')}</button>
           </div>
         </div>
         <img
