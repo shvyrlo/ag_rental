@@ -2,6 +2,12 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useInView } from '../lib/useInView.js';
+import stepDeckImg from '../assets/trailers/step-deck.png';
+import conestogaImg from '../assets/trailers/conestoga.png';
+import flatbedImg from '../assets/trailers/flatbed.png';
+import reeferImg from '../assets/trailers/reefer.png';
+import peterbiltImg from '../assets/trucks/peterbilt-579.png';
+import cascadiaImg from '../assets/trucks/freightliner-cascadia.png';
 
 // All fleet data lives here so the page stays pure-presentation.
 const FLEET = {
@@ -12,6 +18,7 @@ const FLEET = {
       price: '$985 – $1,200',
       unit: '/ week',
       deposit: '$5,000 deposit',
+      image: peterbiltImg,
       bullets: [
         'Maintenance 0.15 cpm',
         'Physical damage not included',
@@ -24,6 +31,7 @@ const FLEET = {
       price: '$985 – $1,200',
       unit: '/ week',
       deposit: '$5,000 deposit',
+      image: cascadiaImg,
       bullets: [
         'Maintenance 0.15 cpm',
         'Physical damage not included',
@@ -38,6 +46,7 @@ const FLEET = {
       price: '$1,600',
       unit: '/ month',
       deposit: '$2,000 security deposit',
+      image: stepDeckImg,
       bullets: [
         'Benson, Wabash, Reitnouer',
         'Ramps and two toolboxes included',
@@ -52,6 +61,7 @@ const FLEET = {
       price: '$1,800',
       unit: '/ month',
       deposit: '$2,000 security deposit',
+      image: conestogaImg,
       bullets: [
         'Reitnouer 53 ft',
         'Tire and brake maintenance included (normal wear)',
@@ -65,6 +75,7 @@ const FLEET = {
       price: '$1,300',
       unit: '/ month',
       deposit: '$1,500 security deposit',
+      image: flatbedImg,
       bullets: [
         'Benson, Wabash, Reitnouer, MAC',
         'Two toolboxes included',
@@ -79,6 +90,7 @@ const FLEET = {
       price: 'Priority waitlist',
       unit: '',
       deposit: null,
+      image: reeferImg,
       bullets: [
         'Reefer trailers are scheduled to arrive at our Channahon yard.',
         'Contact us now to join the priority waitlist.',
@@ -254,7 +266,7 @@ export default function Home() {
             </div>
           </Reveal>
 
-          <div className="mt-12 grid gap-6 sm:grid-cols-2">
+          <div className="mt-12 mx-auto max-w-5xl flex flex-col gap-6">
             {FLEET[tab].map((unit, i) => (
               <Reveal key={unit.name} delay={80 + i * 120}>
                 <FleetCard unit={unit} applyHref={applyHref} />
@@ -479,46 +491,116 @@ function TabButton({ active, onClick, children }) {
 }
 
 function FleetCard({ unit, applyHref }) {
+  // Big trailer image stays visible; click anywhere on the card to reveal
+  // the bulleted description, which slides up from the bottom edge.
+  const [open, setOpen] = useState(false);
+
   return (
-    <div className="card-lift group rounded-2xl border border-slate-200 bg-white p-7 flex flex-col h-full
-                    hover:border-brand-300 hover:shadow-md">
-      <div className="flex items-baseline justify-between gap-4">
-        <h3 className="font-display text-2xl font-semibold text-slate-900">
-          {unit.name}
-        </h3>
-        <span className="text-xs uppercase tracking-wider text-slate-500">
-          {unit.years}
-        </span>
-      </div>
-
-      <div className="mt-5 flex items-baseline gap-2">
-        <div className="font-display text-4xl font-semibold text-slate-900 leading-none">
-          {unit.price}
-        </div>
-        {unit.unit && (
-          <div className="text-sm text-slate-500">{unit.unit}</div>
-        )}
-      </div>
-      {unit.deposit && (
-        <div className="mt-1 text-xs text-slate-500">{unit.deposit}</div>
-      )}
-
-      <ul className="mt-6 space-y-2 text-sm text-slate-600 flex-1">
-        {unit.bullets.map((b) => (
-          <li key={b} className="flex gap-2.5">
-            <span className="text-brand-500 mt-1 select-none">—</span>
-            <span className="leading-relaxed">{b}</span>
-          </li>
-        ))}
-      </ul>
-
-      <Link
-        to={applyHref}
-        className="link-arrow mt-8 self-start text-sm font-medium
-                   text-brand-700 hover:text-brand-800 underline-offset-4 hover:underline"
+    <div
+      className={`card-lift rounded-2xl border bg-white overflow-hidden
+                  transition-[border-color,box-shadow] duration-200
+                  ${open
+                    ? 'border-brand-300 shadow-md'
+                    : 'border-slate-200 hover:border-brand-300 hover:shadow-md'}`}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="w-full text-left focus:outline-none focus-visible:ring-2
+                   focus-visible:ring-brand-300 rounded-2xl"
       >
-        Apply now <span className="arrow">→</span>
-      </Link>
+        <div className="flex flex-col sm:flex-row items-stretch">
+          {/* Trailer image — big and prominent, left side on desktop, top on mobile */}
+          {unit.image && (
+            <div className="relative shrink-0 w-full sm:w-[32rem] h-72 sm:h-96
+                            bg-gradient-to-br from-slate-50 to-slate-100
+                            flex items-center justify-center overflow-hidden">
+              <img
+                src={unit.image}
+                alt={`${unit.name} trailer`}
+                className="h-full w-full object-contain p-6 transition-transform
+                           duration-500 group-hover:scale-[1.03]"
+                loading="lazy"
+              />
+            </div>
+          )}
+
+          {/* Summary — name, years, price, deposit */}
+          <div className="flex-1 min-w-0 p-6 sm:p-7 flex flex-col justify-center">
+            <div className="flex items-baseline justify-between gap-4">
+              <h3 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
+                {unit.name}
+              </h3>
+              <span className="text-xs uppercase tracking-wider text-slate-500 whitespace-nowrap">
+                {unit.years}
+              </span>
+            </div>
+
+            <div className="mt-4 flex items-baseline justify-between gap-4">
+              <div className="flex items-baseline gap-2">
+                <div className="font-display text-3xl sm:text-4xl font-semibold text-slate-900 leading-none">
+                  {unit.price}
+                </div>
+                {unit.unit && (
+                  <div className="text-sm text-slate-500">{unit.unit}</div>
+                )}
+              </div>
+              {/* Chevron — rotates 180° when expanded */}
+              <svg
+                className={`shrink-0 h-6 w-6 text-slate-400 transition-transform duration-300
+                            ${open ? 'rotate-180' : ''}`}
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            {unit.deposit && (
+              <div className="mt-1 text-xs text-slate-500">{unit.deposit}</div>
+            )}
+            <div className="mt-3 text-xs text-slate-400 italic">
+              {open ? 'Click to close' : 'Click for details →'}
+            </div>
+          </div>
+        </div>
+      </button>
+
+      {/* Description slides up from the bottom when opened */}
+      <div
+        className={`grid transition-[grid-template-rows,opacity] duration-400 ease-out
+                    ${open
+                      ? 'grid-rows-[1fr] opacity-100'
+                      : 'grid-rows-[0fr] opacity-0'}`}
+      >
+        <div className="overflow-hidden">
+          <div className={`px-6 sm:px-7 pb-7 pt-5 border-t border-slate-100
+                           transition-transform duration-400 ease-out
+                           ${open ? 'translate-y-0' : 'translate-y-4'}`}>
+            <ul className="space-y-2 text-sm text-slate-600">
+              {unit.bullets.map((b) => (
+                <li key={b} className="flex gap-2.5">
+                  <span className="text-brand-500 mt-1 select-none">—</span>
+                  <span className="leading-relaxed">{b}</span>
+                </li>
+              ))}
+            </ul>
+
+            <Link
+              to={applyHref}
+              className="link-arrow mt-6 inline-block text-sm font-medium
+                         text-brand-700 hover:text-brand-800 underline-offset-4 hover:underline"
+            >
+              Apply now <span className="arrow">→</span>
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
