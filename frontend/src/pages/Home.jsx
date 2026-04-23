@@ -113,13 +113,6 @@ const PROCESS = [
     body: 'Finally, you\'re ready to sign the Lease Agreement and conduct a final inspection noting any issues. The security deposit and first month\'s rent (or proration) is due (card payments are not accepted).' },
 ];
 
-const TRAILER_GALLERY = [
-  { name: 'Reefer',    blurb: 'For temperature-sensitive goods. New 2024–2026 units.' },
-  { name: 'Conestoga', blurb: 'For weather-sensitive cargo. Brand new 2026 Reitnouer 53.' },
-  { name: 'Step Deck', blurb: 'For taller loads. Also new 2024–2026 & DOT-ready.' },
-  { name: 'Flatbed',   blurb: 'New 2024–2026 models. Fully serviced and DOT-ready.' },
-];
-
 export default function Home() {
   const { user } = useAuth();
   const [tab, setTab] = useState('trailers');
@@ -204,8 +197,40 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ─── Rental Fleet ──────────────────────────────────── */}
+      <section id="fleet" className="bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-24 lg:py-28">
+          <Reveal>
+            <div>
+              <p className="eyebrow text-brand-700">Our</p>
+              <div className="mt-5 flex flex-wrap items-end gap-6">
+                <h2 className="font-display text-5xl sm:text-6xl font-semibold text-slate-900 leading-[1.02]">
+                  Rental Fleet.
+                </h2>
+                <div className="inline-flex rounded-full border border-slate-300 bg-white p-2 shadow-sm">
+                  <TabButton active={tab === 'trucks'} onClick={() => setTab('trucks')}>
+                    Trucks
+                  </TabButton>
+                  <TabButton active={tab === 'trailers'} onClick={() => setTab('trailers')}>
+                    Trailers
+                  </TabButton>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+
+          <div className="mt-12 mx-auto max-w-7xl flex flex-col gap-6">
+            {FLEET[tab].map((unit, i) => (
+              <Reveal key={unit.name} delay={80 + i * 120}>
+                <FleetCard unit={unit} applyHref={applyHref} />
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── The AG Difference ─────────────────────────────── */}
-      <section id="difference" className="bg-white">
+      <section id="difference" className="bg-slate-50 border-y border-slate-200">
         <div className="mx-auto max-w-6xl px-4 py-24 lg:py-28 grid gap-14 lg:gap-20 lg:grid-cols-12">
           <Reveal className="lg:col-span-5">
             <p className="eyebrow text-brand-700">The AG</p>
@@ -241,38 +266,6 @@ export default function Home() {
                 body="Channahon, IL — a DOT-ready yard ten minutes from I-55 and I-80." />
             </div>
           </Reveal>
-        </div>
-      </section>
-
-      {/* ─── Rental Fleet ──────────────────────────────────── */}
-      <section id="fleet" className="bg-slate-50 border-y border-slate-200">
-        <div className="mx-auto max-w-6xl px-4 py-24 lg:py-28">
-          <Reveal>
-            <div className="flex flex-wrap items-end justify-between gap-6">
-              <div>
-                <p className="eyebrow text-brand-700">Our</p>
-                <h2 className="mt-5 font-display text-5xl sm:text-6xl font-semibold text-slate-900 leading-[1.02]">
-                  Rental Fleet.
-                </h2>
-              </div>
-              <div className="inline-flex rounded-full border border-slate-300 bg-white p-1 shadow-sm">
-                <TabButton active={tab === 'trucks'} onClick={() => setTab('trucks')}>
-                  Trucks
-                </TabButton>
-                <TabButton active={tab === 'trailers'} onClick={() => setTab('trailers')}>
-                  Trailers
-                </TabButton>
-              </div>
-            </div>
-          </Reveal>
-
-          <div className="mt-12 mx-auto max-w-5xl flex flex-col gap-6">
-            {FLEET[tab].map((unit, i) => (
-              <Reveal key={unit.name} delay={80 + i * 120}>
-                <FleetCard unit={unit} applyHref={applyHref} />
-              </Reveal>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -335,76 +328,6 @@ export default function Home() {
                 as <span className="font-medium">loss payee</span> /{' '}
                 <span className="font-medium">certificate holder</span> and additional insured.
               </p>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ─── Available Trailer Fleet gallery ──────────────── */}
-      <section className="relative overflow-hidden bg-slate-950 text-white">
-        <div
-          className="pointer-events-none absolute inset-0 animate-slow-pulse"
-          style={{
-            background:
-              'radial-gradient(500px at 80% 20%, rgba(26,107,136,0.22), transparent 60%),' +
-              'radial-gradient(500px at 10% 90%, rgba(208,36,54,0.15), transparent 60%)',
-          }}
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.06] animate-grid-drift"
-          style={{
-            backgroundImage:
-              'linear-gradient(to right, #fff 1px, transparent 1px),' +
-              'linear-gradient(to bottom, #fff 1px, transparent 1px)',
-            backgroundSize: '64px 64px',
-          }}
-          aria-hidden="true"
-        />
-        <div className="relative mx-auto max-w-6xl px-4 py-24 lg:py-28">
-          <Reveal>
-            <p className="eyebrow text-accent-300">Available</p>
-            <h2 className="mt-5 font-display text-5xl sm:text-6xl font-semibold leading-[1.02]">
-              Trailer Fleet.
-            </h2>
-            <p className="mt-6 max-w-2xl text-slate-300 leading-relaxed">
-              Four workhorses, each in late-model condition and DOT-ready
-              the day you take delivery.
-            </p>
-          </Reveal>
-
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {TRAILER_GALLERY.map((t, i) => (
-              <Reveal key={t.name} delay={80 + i * 100}>
-                <div
-                  className="card-lift group relative rounded-2xl bg-slate-900/60 backdrop-blur
-                             border border-white/10 p-7 flex flex-col h-full
-                             hover:border-accent-400/60 hover:bg-slate-900"
-                >
-                  <span className="num-display text-sm text-accent-300/70">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <h3 className="mt-2 font-display text-3xl font-semibold">{t.name}</h3>
-                  <p className="mt-4 text-sm text-slate-300 flex-1 leading-relaxed">
-                    {t.blurb}
-                  </p>
-                  <Link
-                    to={applyHref}
-                    className="link-arrow mt-6 text-sm text-accent-300 group-hover:text-accent-100
-                               transition underline-offset-4 hover:underline"
-                  >
-                    See availability <span className="arrow">→</span>
-                  </Link>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-
-          <Reveal delay={200}>
-            <div className="mt-12">
-              <Link to={applyHref} className="btn-primary text-base px-5 py-2.5 link-arrow">
-                Get a quote <span className="arrow">→</span>
-              </Link>
             </div>
           </Reveal>
         </div>
@@ -479,7 +402,7 @@ function TabButton({ active, onClick, children }) {
       type="button"
       onClick={onClick}
       className={
-        'px-5 py-1.5 text-sm font-medium rounded-full transition ' +
+        'px-10 py-3 text-lg font-medium rounded-full transition ' +
         (active
           ? 'bg-brand-600 text-white shadow-sm'
           : 'text-slate-600 hover:text-slate-900')
@@ -513,7 +436,7 @@ function FleetCard({ unit, applyHref }) {
         <div className="flex flex-col sm:flex-row items-stretch">
           {/* Trailer image — big and prominent, left side on desktop, top on mobile */}
           {unit.image && (
-            <div className="relative shrink-0 w-full sm:w-[32rem] h-72 sm:h-96
+            <div className="relative shrink-0 w-full sm:w-[52rem] h-96 sm:h-[34rem]
                             bg-gradient-to-br from-slate-50 to-slate-100
                             flex items-center justify-center overflow-hidden">
               <img
