@@ -6,6 +6,17 @@ html, body, #root {
   height: 100%;
 }
 
+/* Prevent any descendant from ever introducing horizontal scroll — on
+   mobile a stray wide element used to reveal a thin white strip on the
+   right edge of dark sections. `clip` is preferred over `hidden` because
+   it doesn't create a new scroll container (keeps sticky positioning
+   working); fall back to `hidden` on older browsers. */
+html, body {
+  overflow-x: hidden;
+  overflow-x: clip;
+  max-width: 100%;
+}
+
 /* Inter as the default UI face, with feature settings that tighten
    punctuation ("cv11") and enable stylistic alternates ("ss01"). */
 body {
