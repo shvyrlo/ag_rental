@@ -1,5 +1,7 @@
 import IconCard from '../../components/IconCard.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import equipmentIcon from '../../assets/icons/admin/equipment.png';
+import repairClaimsIcon from '../../assets/icons/admin/repair-claims.png';
 
 export default function MechanicDashboard() {
   const { user } = useAuth();
@@ -13,13 +15,13 @@ export default function MechanicDashboard() {
       <div className="mt-8 grid gap-6 sm:grid-cols-2">
         <IconCard
           to="/mechanic/equipment"
-          icon="🚜"
+          image={equipmentIcon}
           title="List of equipment"
           description="Every piece of equipment in the catalog."
         />
         <IconCard
           to="/mechanic/repair-claims"
-          icon="🛠️"
+          image={repairClaimsIcon}
           title="Repair claims"
           description="Pick up, work, and resolve claims."
         />

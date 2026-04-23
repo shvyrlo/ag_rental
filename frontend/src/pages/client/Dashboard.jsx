@@ -1,5 +1,10 @@
 import IconCard from '../../components/IconCard.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import equipmentIcon from '../../assets/icons/admin/equipment.png';
+import inspectionsIcon from '../../assets/icons/admin/inspections.png';
+import paymentsIcon from '../../assets/icons/admin/payments.png';
+import repairClaimsIcon from '../../assets/icons/admin/repair-claims.png';
+import leaseApplicationsIcon from '../../assets/icons/admin/lease-applications.png';
 
 export default function ClientDashboard() {
   const { user } = useAuth();
@@ -13,31 +18,31 @@ export default function ClientDashboard() {
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <IconCard
           to="/client/rent"
-          icon="🚜"
+          image={equipmentIcon}
           title="Rent equipment"
           description="Browse the catalog and book equipment."
         />
         <IconCard
           to="/client/inspections"
-          icon="🔍"
+          image={inspectionsIcon}
           title="Inspections"
           description="Request and track inspections."
         />
         <IconCard
           to="/client/payments"
-          icon="💳"
+          image={paymentsIcon}
           title="Payments"
           description="Pay invoices and see history."
         />
         <IconCard
           to="/client/repair-claims"
-          icon="🛠️"
+          image={repairClaimsIcon}
           title="Repair claims"
           description="File a repair claim for rented equipment."
         />
         <IconCard
           to="/client/lease-application"
-          icon="📝"
+          image={leaseApplicationsIcon}
           title="Lease application"
           description="Submit a lease application with company details and documents."
         />
