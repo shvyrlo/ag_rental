@@ -15,37 +15,12 @@ export default function ClientDashboard() {
       </h1>
       <p className="mt-1 text-slate-600">Your client dashboard.</p>
 
-      <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <IconCard
-          to="/client/rent"
-          image={equipmentIcon}
-          title="Rent equipment"
-          description="Browse the catalog and book equipment."
-        />
-        <IconCard
-          to="/client/inspections"
-          image={inspectionsIcon}
-          title="Inspections"
-          description="Request and track inspections."
-        />
-        <IconCard
-          to="/client/payments"
-          image={paymentsIcon}
-          title="Payments"
-          description="Pay invoices and see history."
-        />
-        <IconCard
-          to="/client/repair-claims"
-          image={repairClaimsIcon}
-          title="Repair claims"
-          description="File a repair claim for rented equipment."
-        />
-        <IconCard
-          to="/client/lease-application"
-          image={leaseApplicationsIcon}
-          title="Lease application"
-          description="Submit a lease application with company details and documents."
-        />
+      <div className="mt-8 grid grid-cols-2 gap-6 lg:grid-cols-3">
+        <IconCard to="/client/rent" image={equipmentIcon} title="Rent equipment" />
+        <IconCard to="/client/inspections" image={inspectionsIcon} title="Inspections" />
+        <IconCard to="/client/payments" image={paymentsIcon} title="Payments" />
+        <IconCard to="/client/repair-claims" image={repairClaimsIcon} title="Repair claims" />
+        <IconCard to="/client/lease-application" image={leaseApplicationsIcon} title="Lease application" />
       </div>
     </div>
   );

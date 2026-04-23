@@ -12,19 +12,9 @@ export default function MechanicDashboard() {
       </h1>
       <p className="mt-1 text-slate-600">Your workbench.</p>
 
-      <div className="mt-8 grid gap-6 sm:grid-cols-2">
-        <IconCard
-          to="/mechanic/equipment"
-          image={equipmentIcon}
-          title="List of equipment"
-          description="Every piece of equipment in the catalog."
-        />
-        <IconCard
-          to="/mechanic/repair-claims"
-          image={repairClaimsIcon}
-          title="Repair claims"
-          description="Pick up, work, and resolve claims."
-        />
+      <div className="mt-8 grid grid-cols-2 gap-6">
+        <IconCard to="/mechanic/equipment" image={equipmentIcon} title="List of equipment" />
+        <IconCard to="/mechanic/repair-claims" image={repairClaimsIcon} title="Repair claims" />
       </div>
     </div>
   );
