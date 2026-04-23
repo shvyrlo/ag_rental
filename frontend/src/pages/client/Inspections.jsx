@@ -3,15 +3,16 @@ import { api } from '../../lib/api.js';
 import { compressImage, renameToJpg, MAX_SOURCE_BYTES } from '../../lib/imageCompress.js';
 import StatusBadge from '../../components/StatusBadge.jsx';
 
-// Six-photo upload: one inspection per kind (start / end) per rental.
-const SLOTS = [1, 2, 3, 4, 5, 6];
+// Six-photo minimum per inspection (one per kind/rental). Clients can
+// add more slots past that if they need extra angles.
+const MIN_PHOTOS = 6;
 const KINDS = [
   { value: 'start', label: 'Start of rental' },
   { value: 'end',   label: 'End of rental' },
 ];
 
 function emptyPhotos() {
-  return SLOTS.map(() => ({ name: '', data: '' }));
+  return Array.from({ length: MIN_PHOTOS }, () => ({ name: '', data: '' }));
 }
 
 export default function ClientInspections() {
@@ -24,8 +25,6 @@ export default function ClientInspections() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [busy, setBusy] = useState(false);
-
-  const inputRefs = useRef(SLOTS.map(() => null));
 
   async function load() {
     try {
@@ -63,7 +62,6 @@ export default function ClientInspections() {
   function resetForm() {
     setPhotos(emptyPhotos());
     setNotes('');
-    inputRefs.current.forEach((el) => { if (el) el.value = ''; });
   }
 
   async function pickPhoto(idx, event) {
@@ -97,8 +95,20 @@ export default function ClientInspections() {
       next[idx] = { name: '', data: '' };
       return next;
     });
-    const el = inputRefs.current[idx];
-    if (el) el.value = '';
+  }
+
+  function addPhotoSlot() {
+    setPhotos((prev) => [...prev, { name: '', data: '' }]);
+  }
+
+  function removePhotoSlot(idx) {
+    // Only allow removing extra slots beyond the required minimum.
+    setPhotos((prev) => {
+      if (idx < MIN_PHOTOS || idx >= prev.length) return prev;
+      const next = [...prev];
+      next.splice(idx, 1);
+      return next;
+    });
   }
 
   async function handleSubmit(e) {
@@ -111,8 +121,8 @@ export default function ClientInspections() {
       return;
     }
     const filled = photos.filter((p) => p.data).length;
-    if (filled !== 6) {
-      setError(`Please upload all 6 photos (${filled}/6 uploaded).`);
+    if (filled < MIN_PHOTOS) {
+      setError(`Please take all ${MIN_PHOTOS} photos (${filled}/${MIN_PHOTOS} taken).`);
       return;
     }
     if (alreadySubmitted) {
@@ -129,7 +139,8 @@ export default function ClientInspections() {
           equipment_id: rental.equipment_id,
           kind,
           notes,
-          photos,
+          // Drop any empty extra slots — backend only wants real photos.
+          photos: photos.filter((p) => p.data),
         },
       });
       setSuccess(`${kind === 'start' ? 'Start' : 'End'}-of-rental inspection submitted.`);
@@ -204,20 +215,34 @@ export default function ClientInspections() {
 
           <div>
             <p className="text-sm font-medium text-slate-700 mb-2">
-              Equipment photos (6 required). Photos are automatically resized to
-              1600 px and re-encoded as JPEG before upload.
+              Equipment photos ({MIN_PHOTOS} required). Photos must be taken with the
+              camera — they're automatically resized to 1600 px and re-encoded
+              as JPEG before upload.
             </p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {SLOTS.map((slot, idx) => (
+              {photos.map((p, idx) => (
                 <PhotoSlot
-                  key={slot}
-                  label={`Photo ${slot}`}
-                  photo={photos[idx]}
-                  inputRef={(el) => { inputRefs.current[idx] = el; }}
+                  key={idx}
+                  label={`Photo ${idx + 1}`}
+                  photo={p}
+                  isExtra={idx >= MIN_PHOTOS}
                   onChange={(e) => pickPhoto(idx, e)}
                   onClear={() => clearPhoto(idx)}
+                  onRemoveSlot={() => removePhotoSlot(idx)}
                 />
               ))}
+              <button
+                type="button"
+                onClick={addPhotoSlot}
+                className="rounded-lg border-2 border-dashed border-slate-300 p-3
+                           flex flex-col items-center justify-center gap-2 min-h-[220px]
+                           text-slate-500 hover:border-brand-400 hover:text-brand-700 hover:bg-brand-50/50
+                           transition"
+              >
+                <span className="text-3xl leading-none">+</span>
+                <span className="text-sm font-medium">Add photo</span>
+                <span className="text-xs text-slate-400">if {MIN_PHOTOS} isn't enough</span>
+              </button>
             </div>
           </div>
 
@@ -276,18 +301,23 @@ export default function ClientInspections() {
   );
 }
 
-function PhotoSlot({ label, photo, inputRef, onChange, onClear }) {
+function PhotoSlot({ label, photo, isExtra, onChange, onClear, onRemoveSlot }) {
   const cameraRef = useRef(null);
-  const uploadRef = useRef(null);
-  // Forward the upload input ref to the parent (used for reset on submit).
-  const setUploadRef = (el) => {
-    uploadRef.current = el;
-    if (typeof inputRef === 'function') inputRef(el);
-    else if (inputRef) inputRef.current = el;
-  };
   return (
     <div className="rounded-lg border border-slate-200 p-3 flex flex-col gap-2">
-      <p className="text-xs font-medium text-slate-600">{label}</p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium text-slate-600">{label}</p>
+        {isExtra && (
+          <button
+            type="button"
+            onClick={onRemoveSlot}
+            title="Remove this extra slot"
+            className="text-xs text-slate-400 hover:text-red-600 leading-none px-1"
+          >
+            ×
+          </button>
+        )}
+      </div>
       {photo?.data ? (
         <img
           src={photo.data}
@@ -308,29 +338,13 @@ function PhotoSlot({ label, photo, inputRef, onChange, onClear }) {
         onChange={onChange}
         className="hidden"
       />
-      <input
-        ref={setUploadRef}
-        type="file"
-        accept="image/*"
-        onChange={onChange}
-        className="hidden"
-      />
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => cameraRef.current?.click()}
-          className="flex-1 rounded-md bg-slate-800 px-2 py-1 text-xs font-medium text-white hover:bg-slate-700"
-        >
-          Take photo
-        </button>
-        <button
-          type="button"
-          onClick={() => uploadRef.current?.click()}
-          className="flex-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-        >
-          Upload
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => cameraRef.current?.click()}
+        className="w-full rounded-md bg-slate-800 px-2 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
+      >
+        {photo?.data ? 'Retake photo' : 'Take photo'}
+      </button>
       {photo?.name && (
         <div className="flex items-center justify-between text-xs">
           <span className="truncate text-slate-700" title={photo.name}>{photo.name}</span>
