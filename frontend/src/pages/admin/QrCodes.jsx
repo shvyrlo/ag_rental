@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { api } from '../../lib/api.js';
-import agMarkUrl from '../../assets/ag-mark.svg';
+import agMarkUrl from '../../assets/brand/ag-mark.png';
+import equipmentRentalUrl from '../../assets/brand/equipment-rental.png';
 
 // Print sizes the admin can choose from for downloadable PNGs.
 // 150 DPI gives sharp large-format output without blowing past
@@ -14,24 +15,18 @@ const SIZES = [
 ];
 const DEFAULT_INCHES = 10;
 
-// AG mark SVG aspect ratio (viewBox 0 0 123 54.64).
-const AG_MARK_ASPECT = 123 / 54.64;
-
-// Brand red used for the "EQUIPMENT RENTAL" caption — matches the A in the logo.
-const BRAND_RED = '#c8213c';
-
-// Load an <img> once and cache it. Used to rasterize the AG mark onto canvases.
-let agMarkImagePromise = null;
-function loadAgMark() {
-  if (!agMarkImagePromise) {
-    agMarkImagePromise = new Promise((resolve, reject) => {
+// Cache each brand asset as a loaded Image — reused across every render.
+const imageCache = new Map();
+function loadImage(src) {
+  if (!imageCache.has(src)) {
+    imageCache.set(src, new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => resolve(img);
       img.onerror = reject;
-      img.src = agMarkUrl;
-    });
+      img.src = src;
+    }));
   }
-  return agMarkImagePromise;
+  return imageCache.get(src);
 }
 
 function roundedRectPath(ctx, x, y, w, h, r) {
@@ -48,11 +43,23 @@ function roundedRectPath(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// Render the branded QR (QR + centered AG card + red EQUIPMENT RENTAL caption)
+// Render the branded QR (QR + centered AG card + red EQUIPMENT RENTAL banner)
 // onto a <canvas> at the requested pixel size. Uses error-correction level H
 // so the central ~22% obstruction is still scannable.
 async function renderBrandedQr(canvas, text, px) {
-  const captionH = Math.round(px * 0.12);
+  // Load brand art first so we can compute the caption band height from its
+  // aspect ratio (makes it look balanced at every size).
+  const [agImg, erImg] = await Promise.all([
+    loadImage(agMarkUrl),
+    loadImage(equipmentRentalUrl),
+  ]);
+
+  // Band height = banner PNG natural height scaled to the QR width,
+  // with a small top/bottom gap. Keeps the text visually proportional.
+  const bannerW = px * 0.86;
+  const bannerH = bannerW * (erImg.naturalHeight / erImg.naturalWidth);
+  const captionH = Math.round(bannerH + px * 0.05);
+
   canvas.width = px;
   canvas.height = px + captionH;
   const ctx = canvas.getContext('2d');
@@ -71,40 +78,29 @@ async function renderBrandedQr(canvas, text, px) {
   });
   ctx.drawImage(qrCanvas, 0, 0, px, px);
 
-  // Centered white rounded card that will hold the AG mark.
-  const cardSize = Math.round(px * 0.22);
-  const cardX = (px - cardSize) / 2;
-  const cardY = (px - cardSize) / 2;
-  const cardR = cardSize * 0.18;
-  roundedRectPath(ctx, cardX, cardY, cardSize, cardSize, cardR);
+  // Centered white rounded card that will hold the AG mark (fits the mark's
+  // aspect ratio instead of being a hard square — gives tighter composition).
+  const agAspect = agImg.naturalWidth / agImg.naturalHeight;
+  const cardH = Math.round(px * 0.18);
+  const cardW = Math.round(cardH * agAspect * 1.22); // a little breathing room
+  const cardX = Math.round((px - cardW) / 2);
+  const cardY = Math.round((px - cardH) / 2);
+  const cardR = Math.round(Math.min(cardW, cardH) * 0.18);
+  roundedRectPath(ctx, cardX, cardY, cardW, cardH, cardR);
   ctx.fillStyle = '#ffffff';
   ctx.fill();
 
-  // AG mark inside the card — fit by width, keep aspect.
-  const agImg = await loadAgMark();
-  const logoW = cardSize * 0.72;
-  const logoH = logoW / AG_MARK_ASPECT;
-  const logoX = cardX + (cardSize - logoW) / 2;
-  const logoY = cardY + (cardSize - logoH) / 2;
+  // AG mark inside the card — fit by height, keep aspect.
+  const logoH = Math.round(cardH * 0.78);
+  const logoW = Math.round(logoH * agAspect);
+  const logoX = Math.round(cardX + (cardW - logoW) / 2);
+  const logoY = Math.round(cardY + (cardH - logoH) / 2);
   ctx.drawImage(agImg, logoX, logoY, logoW, logoH);
 
-  // "EQUIPMENT RENTAL" caption underneath.
-  const fontPx = Math.round(captionH * 0.7);
-  ctx.fillStyle = BRAND_RED;
-  ctx.font = `900 ${fontPx}px "Barlow Condensed", "Arial Narrow", "Impact", sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  // Modest positive letter-spacing via character-by-character draw.
-  const label = 'EQUIPMENT RENTAL';
-  const tracking = fontPx * 0.05;
-  const widths = [...label].map((ch) => ctx.measureText(ch).width);
-  const totalW = widths.reduce((a, b) => a + b, 0) + tracking * (label.length - 1);
-  let x = (canvas.width - totalW) / 2;
-  const y = px + captionH / 2;
-  for (let i = 0; i < label.length; i++) {
-    ctx.fillText(label[i], x + widths[i] / 2, y);
-    x += widths[i] + tracking;
-  }
+  // EQUIPMENT RENTAL banner underneath — centered, width-capped at 86%.
+  const bannerX = (canvas.width - bannerW) / 2;
+  const bannerY = px + (captionH - bannerH) / 2;
+  ctx.drawImage(erImg, bannerX, bannerY, bannerW, bannerH);
 }
 
 // Render the branded QR at print size and trigger a browser download.
