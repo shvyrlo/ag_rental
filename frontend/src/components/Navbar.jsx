@@ -24,7 +24,7 @@ export default function Navbar() {
           <img
             src={logoUrl}
             alt="AG Truck &amp; Trailer Rental"
-            className="h-20 sm:h-24 w-auto"
+            className="h-12 sm:h-24 w-auto"
           />
         </Link>
 
