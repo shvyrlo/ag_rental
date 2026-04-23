@@ -14,28 +14,34 @@ import peterbiltImg from '../../assets/trucks/peterbilt-579.png';
 import cascadiaImg from '../../assets/trucks/freightliner-cascadia.png';
 
 // Match order matters — most specific keywords first.
-const IMAGE_MATCHERS = [
-  { keys: ['step deck', 'step-deck', 'stepdeck', 'drop deck'], img: stepDeckImg },
-  { keys: ['conestoga', 'curtain'], img: conestogaImg },
-  { keys: ['reefer', 'refriger'], img: reeferImg },
-  { keys: ['flatbed', 'flat bed'], img: flatbedImg },
-  { keys: ['peterbilt', '579'], img: peterbiltImg },
-  { keys: ['freightliner', 'cascadia'], img: cascadiaImg },
+// Each entry also defines the "type bucket" we group units under.
+const TYPE_MATCHERS = [
+  { key: 'step-deck', label: 'Step deck trailer', keys: ['step deck', 'step-deck', 'stepdeck', 'drop deck'], img: stepDeckImg },
+  { key: 'conestoga', label: 'Conestoga trailer', keys: ['conestoga', 'curtain'], img: conestogaImg },
+  { key: 'reefer', label: 'Reefer trailer', keys: ['reefer', 'refriger'], img: reeferImg },
+  { key: 'flatbed', label: 'Flatbed trailer', keys: ['flatbed', 'flat bed'], img: flatbedImg },
+  { key: 'peterbilt', label: 'Peterbilt 579', keys: ['peterbilt', '579'], img: peterbiltImg },
+  { key: 'cascadia', label: 'Freightliner Cascadia', keys: ['freightliner', 'cascadia'], img: cascadiaImg },
 ];
 
 const defaultImg = flatbedImg; // safe visual fallback
 
-function pickImage(eq) {
+function pickType(eq) {
   const hay = `${eq.name || ''} ${eq.category || ''}`.toLowerCase();
-  for (const m of IMAGE_MATCHERS) {
-    if (m.keys.some((k) => hay.includes(k))) return m.img;
+  for (const m of TYPE_MATCHERS) {
+    if (m.keys.some((k) => hay.includes(k))) return m;
   }
-  return defaultImg;
+  return null;
+}
+
+function pickImage(eq) {
+  return pickType(eq)?.img || defaultImg;
 }
 
 export default function RentEquipment() {
   const [equipment, setEquipment] = useState([]);
   const [rentals, setRentals] = useState([]);
+  const [expandedTypeKey, setExpandedTypeKey] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -62,6 +68,32 @@ export default function RentEquipment() {
     [equipment],
   );
 
+  // Group available units by inferred type. Preserves TYPE_MATCHERS order so
+  // the stacked cards always render in a consistent sequence, with "Other"
+  // appended at the end for anything we can't classify.
+  const typeGroups = useMemo(() => {
+    const buckets = new Map();
+    for (const eq of available) {
+      const t = pickType(eq);
+      const key = t?.key || `other:${(eq.category || 'Other').toLowerCase()}`;
+      if (!buckets.has(key)) {
+        buckets.set(key, {
+          key,
+          label: t?.label || eq.category || 'Other equipment',
+          img: t?.img || defaultImg,
+          units: [],
+        });
+      }
+      buckets.get(key).units.push(eq);
+    }
+    const order = new Map(TYPE_MATCHERS.map((m, i) => [m.key, i]));
+    return [...buckets.values()].sort((a, b) => {
+      const ai = order.has(a.key) ? order.get(a.key) : 999;
+      const bi = order.has(b.key) ? order.get(b.key) : 999;
+      return ai - bi;
+    });
+  }, [available]);
+
   const selected = useMemo(
     () => available.find((e) => e.id === selectedId) || null,
     [available, selectedId],
@@ -71,7 +103,7 @@ export default function RentEquipment() {
     e.preventDefault();
     setError(null);
     if (!selected) {
-      setError('Pick an equipment above.');
+      setError('Pick a unit above.');
       return;
     }
     setBusy(true);
@@ -95,66 +127,140 @@ export default function RentEquipment() {
     }
   }
 
+  function toggleType(key) {
+    setExpandedTypeKey((prev) => (prev === key ? null : key));
+  }
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 space-y-10">
       <div>
         <h1 className="text-2xl font-bold">Rent equipment</h1>
-        <p className="text-slate-600">Pick a unit from the fleet below, then choose your dates.</p>
+        <p className="text-slate-600">Pick an equipment type, then choose a unit and dates.</p>
       </div>
 
       <section>
         <h2 className="text-lg font-semibold mb-4">Available fleet</h2>
-        {available.length === 0 ? (
+        {typeGroups.length === 0 ? (
           <p className="text-sm text-slate-500">No equipment is available right now.</p>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {available.map((eq) => {
-              const isSelected = selectedId === eq.id;
+          <div className="space-y-4">
+            {typeGroups.map((group) => {
+              const isOpen = expandedTypeKey === group.key;
+              const rates = group.units
+                .map((u) => Number(u.monthly_rate))
+                .filter((n) => Number.isFinite(n));
+              const startingRate = rates.length ? Math.min(...rates) : null;
+
               return (
-                <button
-                  key={eq.id}
-                  type="button"
-                  onClick={() => setSelectedId(isSelected ? null : eq.id)}
+                <div
+                  key={group.key}
                   className={
-                    'group text-left rounded-xl border bg-white overflow-hidden transition ' +
-                    'hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ' +
-                    (isSelected
-                      ? 'border-brand-600 ring-2 ring-brand-500 shadow-md'
-                      : 'border-slate-200')
+                    'rounded-xl border bg-white overflow-hidden transition ' +
+                    (isOpen ? 'border-brand-500 shadow-md' : 'border-slate-200')
                   }
                 >
-                  <div className="aspect-[16/10] bg-slate-50 flex items-center justify-center overflow-hidden">
-                    <img
-                      src={pickImage(eq)}
-                      alt={eq.name}
-                      className="max-h-full max-w-full object-contain transition-transform group-hover:scale-105"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-semibold text-slate-900 truncate">{eq.name}</p>
-                        {eq.unit_number && (
-                          <p className="text-xs font-mono text-slate-500">Unit {eq.unit_number}</p>
+                  <button
+                    type="button"
+                    onClick={() => toggleType(group.key)}
+                    className="w-full text-left flex items-center gap-4 p-4 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    aria-expanded={isOpen}
+                  >
+                    <div className="w-40 h-24 shrink-0 bg-slate-50 rounded-md border border-slate-200 flex items-center justify-center overflow-hidden">
+                      <img
+                        src={group.img}
+                        alt={group.label}
+                        className="max-h-full max-w-full object-contain"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-slate-900 truncate">{group.label}</p>
+                      <p className="text-sm text-slate-600">
+                        {group.units.length} {group.units.length === 1 ? 'unit' : 'units'} available
+                        {startingRate !== null && (
+                          <>
+                            {' · '}
+                            <span className="text-slate-900 font-medium">
+                              from ${startingRate.toFixed(0)}/mo
+                            </span>
+                          </>
                         )}
-                      </div>
-                      <p className="text-sm font-semibold text-slate-900 whitespace-nowrap">
-                        ${Number(eq.monthly_rate).toFixed(0)}
-                        <span className="text-xs font-normal text-slate-500">/mo</span>
+                      </p>
+                      <p className="mt-1 text-xs font-medium text-brand-700">
+                        {isOpen ? 'Click to collapse' : 'Click to see available units'}
                       </p>
                     </div>
-                    {eq.description && (
-                      <p className="mt-2 text-xs text-slate-600 line-clamp-2">{eq.description}</p>
-                    )}
-                    <p className={
-                      'mt-3 text-xs font-medium ' +
-                      (isSelected ? 'text-brand-700' : 'text-slate-500')
-                    }>
-                      {isSelected ? 'Selected — pick dates below' : 'Click to select'}
-                    </p>
-                  </div>
-                </button>
+                    <svg
+                      aria-hidden
+                      className={'h-5 w-5 text-slate-400 shrink-0 transition-transform ' + (isOpen ? 'rotate-180' : '')}
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+
+                  {isOpen && (
+                    <div className="border-t border-slate-200 bg-slate-50/60">
+                      <ul className="divide-y divide-slate-200">
+                        {group.units.map((u) => {
+                          const isSelected = selectedId === u.id;
+                          return (
+                            <li key={u.id} className="p-4 flex items-start gap-4">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                                  <p className="font-semibold text-slate-900">{u.name}</p>
+                                  {u.unit_number && (
+                                    <span className="text-xs font-mono text-slate-500">Unit {u.unit_number}</span>
+                                  )}
+                                </div>
+                                <p className="mt-1 text-sm text-slate-700">
+                                  ${Number(u.monthly_rate).toFixed(2)}
+                                  <span className="text-slate-500">/month</span>
+                                </p>
+                                {u.description && (
+                                  <p className="mt-1 text-xs text-slate-600">{u.description}</p>
+                                )}
+                                <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600 sm:grid-cols-3">
+                                  {u.category && (
+                                    <div><dt className="inline text-slate-500">Category: </dt><dd className="inline">{u.category}</dd></div>
+                                  )}
+                                  {u.year && (
+                                    <div><dt className="inline text-slate-500">Year: </dt><dd className="inline">{u.year}</dd></div>
+                                  )}
+                                  {u.make && (
+                                    <div><dt className="inline text-slate-500">Make: </dt><dd className="inline">{u.make}</dd></div>
+                                  )}
+                                  {u.model && (
+                                    <div><dt className="inline text-slate-500">Model: </dt><dd className="inline">{u.model}</dd></div>
+                                  )}
+                                  {u.vin && (
+                                    <div className="col-span-2 sm:col-span-3">
+                                      <dt className="inline text-slate-500">VIN: </dt>
+                                      <dd className="inline font-mono">{u.vin}</dd>
+                                    </div>
+                                  )}
+                                </dl>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedId(isSelected ? null : u.id)}
+                                className={
+                                  'shrink-0 rounded-md px-3 py-2 text-sm font-medium transition ' +
+                                  (isSelected
+                                    ? 'bg-brand-600 text-white hover:bg-brand-700'
+                                    : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100')
+                                }
+                              >
+                                {isSelected ? 'Selected' : 'Select'}
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
