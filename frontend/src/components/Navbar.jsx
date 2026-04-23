@@ -19,37 +19,37 @@ export default function Navbar() {
 
   return (
     <header className="bg-white border-b border-slate-200">
-      <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">
-        <Link to="/" aria-label="AG Truck &amp; Trailer Rental — Home" className="flex items-center">
+      <div className="mx-auto max-w-6xl px-3 sm:px-4 py-3 flex items-center justify-between gap-2 sm:gap-4">
+        <Link to="/" aria-label="AG Truck &amp; Trailer Rental — Home" className="flex items-center shrink-0">
           <img
             src={logoUrl}
             alt="AG Truck &amp; Trailer Rental"
-            className="h-12 sm:h-24 w-auto"
+            className="h-10 sm:h-24 w-auto"
           />
         </Link>
 
-        <nav className="flex items-center gap-3">
+        <nav className="flex items-center gap-2 sm:gap-3 shrink-0">
           {user ? (
             <>
               <Link
                 to={dashboardPath}
-                className="text-sm text-slate-700 hover:text-brand-700"
+                className="text-sm text-slate-700 hover:text-brand-700 whitespace-nowrap"
               >
                 Dashboard
               </Link>
-              <span className="hidden sm:inline text-sm text-slate-500">
+              <span className="hidden sm:inline text-sm text-slate-500 whitespace-nowrap">
                 {user.name} · <span className="capitalize">{user.role}</span>
               </span>
-              <button onClick={handleLogout} className="btn-secondary">
+              <button onClick={handleLogout} className="btn-secondary !px-3 sm:!px-4 whitespace-nowrap">
                 Log out
               </button>
             </>
           ) : (
             <>
-              <Link to="/register" className="btn-secondary">
+              <Link to="/register" className="btn-secondary !px-3 sm:!px-4 whitespace-nowrap">
                 Register
               </Link>
-              <Link to="/login" className="btn-primary">
+              <Link to="/login" className="btn-primary !px-3 sm:!px-4 whitespace-nowrap">
                 Log in
               </Link>
             </>
