@@ -89,14 +89,6 @@ export default function ClientInspections() {
     if (el) el.value = '';
   }
 
-  function clearPhoto(idx) {
-    setPhotos((prev) => {
-      const next = [...prev];
-      next[idx] = { name: '', data: '' };
-      return next;
-    });
-  }
-
   function addPhotoSlot() {
     setPhotos((prev) => [...prev, { name: '', data: '' }]);
   }
@@ -227,7 +219,6 @@ export default function ClientInspections() {
                   photo={p}
                   isExtra={idx >= MIN_PHOTOS}
                   onChange={(e) => pickPhoto(idx, e)}
-                  onClear={() => clearPhoto(idx)}
                   onRemoveSlot={() => removePhotoSlot(idx)}
                 />
               ))}
@@ -301,7 +292,7 @@ export default function ClientInspections() {
   );
 }
 
-function PhotoSlot({ label, photo, isExtra, onChange, onClear, onRemoveSlot }) {
+function PhotoSlot({ label, photo, isExtra, onChange, onRemoveSlot }) {
   const cameraRef = useRef(null);
   return (
     <div className="rounded-lg border border-slate-200 p-3 flex flex-col gap-2">
@@ -346,12 +337,7 @@ function PhotoSlot({ label, photo, isExtra, onChange, onClear, onRemoveSlot }) {
         {photo?.data ? 'Retake photo' : 'Take photo'}
       </button>
       {photo?.name && (
-        <div className="flex items-center justify-between text-xs">
-          <span className="truncate text-slate-700" title={photo.name}>{photo.name}</span>
-          <button type="button" onClick={onClear} className="text-red-600 hover:underline">
-            Remove
-          </button>
-        </div>
+        <p className="text-xs text-slate-700 truncate" title={photo.name}>{photo.name}</p>
       )}
     </div>
   );
