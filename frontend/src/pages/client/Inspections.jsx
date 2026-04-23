@@ -294,6 +294,7 @@ function PhotoSlot({ label, photo, inputRef, onChange, onClear }) {
         ref={inputRef}
         type="file"
         accept="image/*"
+        capture="environment"
         onChange={onChange}
         className="block w-full text-xs text-slate-600
                    file:mr-2 file:py-1 file:px-2 file:text-xs
