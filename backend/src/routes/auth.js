@@ -8,6 +8,13 @@ import { startPhoneVerification, checkPhoneVerification } from '../lib/smsVerify
 
 const router = Router();
 
+// Email verification off-switch. When false, new registrations are
+// immediately marked email_verified and no code is sent — so the
+// /verify page is bypassed entirely and users land straight on their
+// dashboard. Flip back to true once a verified sending domain is in
+// place on Resend (see RESEND_FROM in Railway variables).
+const EMAIL_VERIFICATION_ENABLED = false;
+
 // Short-lived 6-digit email codes.
 const EMAIL_CODE_TTL_MIN = 15;
 const EMAIL_MAX_ATTEMPTS = 5;
@@ -66,17 +73,20 @@ router.post('/register', async (req, res) => {
     }
     const hash = await bcrypt.hash(password, 10);
     const phoneNormalized = normalizePhone(phone);
+    const emailVerified = !EMAIL_VERIFICATION_ENABLED;
     const result = await query(
-      `INSERT INTO users (email, password_hash, name, role, phone)
-       VALUES ($1, $2, $3, 'client', $4)
+      `INSERT INTO users (email, password_hash, name, role, phone, email_verified)
+       VALUES ($1, $2, $3, 'client', $4, $5)
        RETURNING id, email, name, role, phone, email_verified, phone_verified`,
-      [email.toLowerCase(), hash, name, phoneNormalized],
+      [email.toLowerCase(), hash, name, phoneNormalized, emailVerified],
     );
     const user = userFromRow(result.rows[0]);
 
-    issueEmailCode(user.id, user.email).catch(err => {
-      console.error('[auth] failed to issue initial email code', err);
-    });
+    if (EMAIL_VERIFICATION_ENABLED) {
+      issueEmailCode(user.id, user.email).catch(err => {
+        console.error('[auth] failed to issue initial email code', err);
+      });
+    }
 
     const token = signToken(user);
     res.status(201).json({ user, token });

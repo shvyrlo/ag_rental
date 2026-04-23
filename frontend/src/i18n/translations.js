@@ -149,6 +149,8 @@ export const translations = {
       'Мы отправим код на вашу почту для подтверждения. Подтверждение телефона не обязательно, но поможет нам связываться с вами по поводу аренды.',
     'We\'ll email you a code to confirm your address. Phone is optional — we use it to reach you about your rental.':
       'Мы отправим код на вашу почту для подтверждения. Телефон не обязателен — мы используем его, чтобы связываться с вами по поводу аренды.',
+    'Phone is optional — we use it to reach you about your rental.':
+      'Телефон не обязателен — мы используем его, чтобы связываться с вами по поводу аренды.',
     'Full name': 'Полное имя',
     'Phone': 'Телефон',
     '(optional)': '(необязательно)',

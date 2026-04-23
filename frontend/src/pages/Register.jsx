@@ -18,9 +18,16 @@ export default function Register() {
     e.preventDefault();
     setError(null);
     try {
-      await register(form);
-      // New accounts land on /verify until email is confirmed.
-      navigate('/verify', { replace: true });
+      const created = await register(form);
+      // When the backend has email verification enabled, new accounts
+      // land on /verify until the email is confirmed. When it's off,
+      // the user comes back already email_verified and goes straight
+      // to the client dashboard.
+      if (created?.email_verified) {
+        navigate('/client', { replace: true });
+      } else {
+        navigate('/verify', { replace: true });
+      }
     } catch (err) {
       setError(err.message);
     }
@@ -31,7 +38,7 @@ export default function Register() {
       <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
         <h1 className="text-2xl font-bold text-slate-900">{t('Create a client account')}</h1>
         <p className="mt-1 text-sm text-slate-600">
-          {t('We\'ll email you a code to confirm your address. Phone is optional — we use it to reach you about your rental.')}
+          {t('Phone is optional — we use it to reach you about your rental.')}
         </p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
