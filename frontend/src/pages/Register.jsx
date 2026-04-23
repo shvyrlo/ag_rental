@@ -31,7 +31,7 @@ export default function Register() {
       <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
         <h1 className="text-2xl font-bold text-slate-900">{t('Create a client account')}</h1>
         <p className="mt-1 text-sm text-slate-600">
-          {t('We\'ll email you a code to confirm your address. Phone verification is optional but helps us reach you about your rental.')}
+          {t('We\'ll email you a code to confirm your address. Phone is optional — we use it to reach you about your rental.')}
         </p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">

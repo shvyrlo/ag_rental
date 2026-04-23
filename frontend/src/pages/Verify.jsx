@@ -4,22 +4,32 @@ import { api } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useT } from '../i18n/i18n.jsx';
 
-// Two-step account verification:
-//   1. Email  (required — user can't reach client dashboard without this)
-//   2. Phone  (optional — user can skip and come back later)
+// Account verification wizard.
+//
+//   1. Email — required; user can't reach the client dashboard without it.
+//   2. Phone — optional, currently DISABLED (Twilio isn't wired up on
+//              Railway). Flip PHONE_VERIFICATION_ENABLED back to true once
+//              the TWILIO_* env vars are in place.
 //
 // Both steps call the backend, which returns a fresh user record and
 // token on success; we push those back into AuthContext via applyAuth.
+const PHONE_VERIFICATION_ENABLED = false;
+
 export default function Verify() {
   const t = useT();
   const { user, applyAuth, refreshUser, logout } = useAuth();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState(user?.email_verified ? 'phone' : 'email');
+  // Step starts at 'email'. Only moves to 'phone' if the feature is on AND
+  // the email is already verified (e.g. user navigated back to /verify).
+  const initialStep = user?.email_verified && PHONE_VERIFICATION_ENABLED
+    ? 'phone'
+    : 'email';
+  const [step, setStep] = useState(initialStep);
   useEffect(() => {
-    // If user state shifts (e.g. /me was refetched elsewhere), keep the
-    // wizard step in sync.
-    if (user?.email_verified && step === 'email') setStep('phone');
+    if (user?.email_verified && step === 'email' && PHONE_VERIFICATION_ENABLED) {
+      setStep('phone');
+    }
   }, [user, step]);
 
   if (!user) {
@@ -36,22 +46,35 @@ export default function Verify() {
     navigate(target, { replace: true });
   }
 
+  // With phone verification off, if the user somehow lands here with their
+  // email already verified, just send them to the dashboard.
+  if (user.email_verified && !PHONE_VERIFICATION_ENABLED) {
+    finish();
+    return null;
+  }
+
   return (
     <div className="mx-auto max-w-md px-4 py-16">
       <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm space-y-6">
-        <Stepper current={step} user={user} />
+        {PHONE_VERIFICATION_ENABLED && <Stepper current={step} user={user} />}
 
         {step === 'email' && (
           <EmailStep
             user={user}
-            onVerified={(auth) => {
+            onVerified={async (auth) => {
               applyAuth(auth);
-              setStep('phone');
+              if (PHONE_VERIFICATION_ENABLED) {
+                setStep('phone');
+              } else {
+                // No phone step — straight to the dashboard.
+                await refreshUser().catch(() => {});
+                finish();
+              }
             }}
           />
         )}
 
-        {step === 'phone' && (
+        {step === 'phone' && PHONE_VERIFICATION_ENABLED && (
           <PhoneStep
             user={user}
             onVerified={(auth) => {
