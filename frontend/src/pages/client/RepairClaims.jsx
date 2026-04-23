@@ -40,7 +40,9 @@ export default function ClientRepairClaims() {
   const [expandedId, setExpandedId] = useState(null);
 
   const fileRef = useRef(null);
+  const beforeCameraRef = useRef(null);
   const afterInputRefs = useRef({});
+  const afterCameraRefs = useRef({});
 
   async function load() {
     try {
@@ -57,12 +59,13 @@ export default function ClientRepairClaims() {
 
   useEffect(() => { load(); }, []);
 
-  async function pickBeforePhoto() {
-    const file = fileRef.current?.files?.[0];
+  async function pickBeforePhoto(e) {
+    const el = e?.target;
+    const file = el?.files?.[0];
     if (!file) return;
     if (file.size > MAX_SOURCE_BYTES) {
       setError(`${file.name} is too large (max 20 MB source).`);
-      if (fileRef.current) fileRef.current.value = '';
+      if (el) el.value = '';
       return;
     }
     setError(null);
@@ -75,6 +78,7 @@ export default function ClientRepairClaims() {
     } catch (err) {
       setError('Could not process photo: ' + err.message);
     }
+    if (el) el.value = '';
   }
 
   function clearBeforePhoto() {
@@ -256,17 +260,36 @@ export default function ClientRepairClaims() {
                 </div>
               )}
               <input
-                ref={fileRef}
+                ref={beforeCameraRef}
                 type="file"
                 accept="image/*"
                 capture="environment"
                 onChange={pickBeforePhoto}
-                className="block w-full text-xs text-slate-600
-                           file:mr-2 file:py-1 file:px-2 file:text-xs
-                           file:rounded file:border-0
-                           file:bg-slate-800 file:text-white
-                           hover:file:bg-slate-700"
+                className="hidden"
               />
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                onChange={pickBeforePhoto}
+                className="hidden"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => beforeCameraRef.current?.click()}
+                  className="flex-1 rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
+                >
+                  Take photo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Upload
+                </button>
+              </div>
               {form.before_photo?.name && (
                 <div className="flex items-center justify-between text-xs">
                   <span className="truncate text-slate-700" title={form.before_photo.name}>
@@ -374,17 +397,36 @@ export default function ClientRepairClaims() {
                               </div>
                             )}
                             <input
-                              ref={(el) => { afterInputRefs.current[c.id] = el; }}
+                              ref={(el) => { afterCameraRefs.current[c.id] = el; }}
                               type="file"
                               accept="image/*"
                               capture="environment"
                               onChange={(e) => pickAfterPhoto(c.id, e)}
-                              className="block w-full text-xs text-slate-600
-                                         file:mr-2 file:py-1 file:px-2 file:text-xs
-                                         file:rounded file:border-0
-                                         file:bg-slate-800 file:text-white
-                                         hover:file:bg-slate-700"
+                              className="hidden"
                             />
+                            <input
+                              ref={(el) => { afterInputRefs.current[c.id] = el; }}
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => pickAfterPhoto(c.id, e)}
+                              className="hidden"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => afterCameraRefs.current[c.id]?.click()}
+                                className="flex-1 rounded-md bg-slate-800 px-2 py-1 text-xs font-medium text-white hover:bg-slate-700"
+                              >
+                                Take photo
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => afterInputRefs.current[c.id]?.click()}
+                                className="flex-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                              >
+                                Upload
+                              </button>
+                            </div>
                             {stagedAfter?.name && (
                               <div className="flex items-center justify-between text-xs">
                                 <span className="truncate text-slate-700" title={stagedAfter.name}>

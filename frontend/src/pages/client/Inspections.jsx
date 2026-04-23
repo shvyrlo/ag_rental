@@ -66,8 +66,8 @@ export default function ClientInspections() {
     inputRefs.current.forEach((el) => { if (el) el.value = ''; });
   }
 
-  async function pickPhoto(idx) {
-    const el = inputRefs.current[idx];
+  async function pickPhoto(idx, event) {
+    const el = event?.target;
     const file = el?.files?.[0];
     if (!file) return;
     if (file.size > MAX_SOURCE_BYTES) {
@@ -87,6 +87,8 @@ export default function ClientInspections() {
     } catch (err) {
       setError('Could not process photo: ' + err.message);
     }
+    // Let the user pick the same file again (e.g. to retry after a camera shot)
+    if (el) el.value = '';
   }
 
   function clearPhoto(idx) {
@@ -212,7 +214,7 @@ export default function ClientInspections() {
                   label={`Photo ${slot}`}
                   photo={photos[idx]}
                   inputRef={(el) => { inputRefs.current[idx] = el; }}
-                  onChange={() => pickPhoto(idx)}
+                  onChange={(e) => pickPhoto(idx, e)}
                   onClear={() => clearPhoto(idx)}
                 />
               ))}
@@ -275,6 +277,14 @@ export default function ClientInspections() {
 }
 
 function PhotoSlot({ label, photo, inputRef, onChange, onClear }) {
+  const cameraRef = useRef(null);
+  const uploadRef = useRef(null);
+  // Forward the upload input ref to the parent (used for reset on submit).
+  const setUploadRef = (el) => {
+    uploadRef.current = el;
+    if (typeof inputRef === 'function') inputRef(el);
+    else if (inputRef) inputRef.current = el;
+  };
   return (
     <div className="rounded-lg border border-slate-200 p-3 flex flex-col gap-2">
       <p className="text-xs font-medium text-slate-600">{label}</p>
@@ -291,17 +301,36 @@ function PhotoSlot({ label, photo, inputRef, onChange, onClear }) {
         </div>
       )}
       <input
-        ref={inputRef}
+        ref={cameraRef}
         type="file"
         accept="image/*"
         capture="environment"
         onChange={onChange}
-        className="block w-full text-xs text-slate-600
-                   file:mr-2 file:py-1 file:px-2 file:text-xs
-                   file:rounded file:border-0
-                   file:bg-slate-800 file:text-white
-                   hover:file:bg-slate-700"
+        className="hidden"
       />
+      <input
+        ref={setUploadRef}
+        type="file"
+        accept="image/*"
+        onChange={onChange}
+        className="hidden"
+      />
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => cameraRef.current?.click()}
+          className="flex-1 rounded-md bg-slate-800 px-2 py-1 text-xs font-medium text-white hover:bg-slate-700"
+        >
+          Take photo
+        </button>
+        <button
+          type="button"
+          onClick={() => uploadRef.current?.click()}
+          className="flex-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Upload
+        </button>
+      </div>
       {photo?.name && (
         <div className="flex items-center justify-between text-xs">
           <span className="truncate text-slate-700" title={photo.name}>{photo.name}</span>
