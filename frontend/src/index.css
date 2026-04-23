@@ -173,6 +173,114 @@ body {
   transform: translateY(-3px);
 }
 
+/* ─── Extra hero effects ─────────────────────────────────────── */
+
+/* Metallic shine that sweeps through the accent italic headline.
+   A bright band moves across a brand-red gradient that's clipped to text. */
+@keyframes shimmerSweep {
+  0%   { background-position: 180% 0; }
+  60%  { background-position: -80% 0; }
+  100% { background-position: -80% 0; }
+}
+.shimmer-text {
+  background: linear-gradient(
+    100deg,
+    #ef4444 0%,
+    #ef4444 42%,
+    rgba(255, 255, 255, 0.95) 50%,
+    #ef4444 58%,
+    #ef4444 100%
+  );
+  background-size: 220% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: shimmerSweep 5s ease-in-out infinite;
+  animation-delay: 1.2s;
+}
+
+/* Floating color orbs behind the hero copy. Two slightly different paths
+   so the composition keeps shifting. */
+@keyframes floatA {
+  0%,100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%     { transform: translate3d(40px, -30px, 0) scale(1.08); }
+}
+@keyframes floatB {
+  0%,100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%     { transform: translate3d(-50px, 25px, 0) scale(0.95); }
+}
+.hero-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(60px);
+  opacity: 0.55;
+  pointer-events: none;
+  will-change: transform;
+}
+.hero-orb--a {
+  width: 420px; height: 420px;
+  left: 8%; top: 12%;
+  background: radial-gradient(circle, rgba(208,36,54,0.55), transparent 70%);
+  animation: floatA 14s ease-in-out infinite;
+}
+.hero-orb--b {
+  width: 360px; height: 360px;
+  right: 6%; bottom: 8%;
+  background: radial-gradient(circle, rgba(26,107,136,0.55), transparent 70%);
+  animation: floatB 18s ease-in-out infinite;
+}
+
+/* Cursor-tracking spotlight. Parent sets --mx / --my (in px) via JS. */
+.hero-spotlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 400ms ease;
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 255, 255, 0.08),
+    transparent 60%
+  );
+}
+.hero-spotlight.is-active { opacity: 1; }
+
+/* Light sweep across a button on hover. Layered as an ::after so it
+   doesn't interfere with the button's own styling. */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%);
+  transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+.btn-shine:hover::after,
+.btn-shine:focus-visible::after {
+  transform: translateX(120%);
+}
+
+/* Bouncing down-chevron cue at the bottom of the hero. */
+@keyframes scrollCue {
+  0%, 100% { transform: translateY(0);    opacity: 0.55; }
+  50%      { transform: translateY(8px);  opacity: 1; }
+}
+.scroll-cue {
+  animation: scrollCue 1.8s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-enter-up,
   .animate-enter-fade,
@@ -180,10 +288,21 @@ body {
   .animate-slow-pulse,
   .reveal,
   .card-lift,
-  .link-arrow .arrow {
+  .link-arrow .arrow,
+  .shimmer-text,
+  .hero-orb,
+  .hero-spotlight,
+  .btn-shine::after,
+  .scroll-cue {
     animation: none !important;
     transition: none !important;
     transform: none !important;
     opacity: 1 !important;
   }
+  .shimmer-text {
+    background: none !important;
+    color: #f87171 !important;
+    -webkit-text-fill-color: #f87171 !important;
+  }
+  .hero-spotlight { display: none !important; }
 }

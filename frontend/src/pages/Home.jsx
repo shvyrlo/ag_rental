@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useT } from '../i18n/i18n.jsx';
@@ -119,6 +119,21 @@ export default function Home() {
   const { user } = useAuth();
   const [tab, setTab] = useState('trailers');
 
+  // Cursor-tracking spotlight for the hero. We write CSS vars directly on
+  // the overlay element so React doesn't re-render on every mousemove.
+  const spotlightRef = useRef(null);
+  function handleHeroMouseMove(e) {
+    const el = spotlightRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty('--mx', (e.clientX - rect.left) + 'px');
+    el.style.setProperty('--my', (e.clientY - rect.top) + 'px');
+    if (!el.classList.contains('is-active')) el.classList.add('is-active');
+  }
+  function handleHeroMouseLeave() {
+    spotlightRef.current?.classList.remove('is-active');
+  }
+
   const applyHref = user ? '/client/lease-application' : '/register';
   const dashboardHref = user
     ? user.role === 'admin' ? '/admin'
@@ -129,7 +144,11 @@ export default function Home() {
   return (
     <div className="font-sans">
       {/* ─── Hero ──────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-slate-950 text-white">
+      <section
+        className="relative overflow-hidden bg-slate-950 text-white"
+        onMouseMove={handleHeroMouseMove}
+        onMouseLeave={handleHeroMouseLeave}
+      >
         {/* Soft radial glows in brand colors for depth, gently breathing. */}
         <div
           className="pointer-events-none absolute inset-0 animate-slow-pulse"
@@ -140,6 +159,9 @@ export default function Home() {
           }}
           aria-hidden="true"
         />
+        {/* Floating brand-color orbs for added depth. */}
+        <div className="hero-orb hero-orb--a" aria-hidden="true" />
+        <div className="hero-orb hero-orb--b" aria-hidden="true" />
         {/* Fine grid line texture, drifting diagonally. */}
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.08] animate-grid-drift"
@@ -151,6 +173,8 @@ export default function Home() {
           }}
           aria-hidden="true"
         />
+        {/* Cursor-tracking spotlight that wakes up on hover. */}
+        <div ref={spotlightRef} className="hero-spotlight" aria-hidden="true" />
 
         <div className="relative mx-auto max-w-6xl px-4 py-24 sm:py-32 lg:py-40">
           <p className="eyebrow text-accent-300 animate-enter-up">
@@ -161,8 +185,8 @@ export default function Home() {
             <span className="block animate-enter-up stagger-1">{t('Honest rates.')}</span>
             <span className="block animate-enter-up stagger-2">{t('Flexible plans.')}</span>
             <span className="block animate-enter-up stagger-3">
-              <span className="font-display-italic text-brand-400">{t('Real trucks,')}</span>{' '}
-              <span className="font-display-italic text-brand-400">{t('ready today.')}</span>
+              <span className="font-display-italic text-brand-400 shimmer-text">{t('Real trucks,')}</span>{' '}
+              <span className="font-display-italic text-brand-400 shimmer-text">{t('ready today.')}</span>
             </span>
           </h1>
 
@@ -171,10 +195,10 @@ export default function Home() {
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-3 animate-enter-up stagger-5">
-            <a href="tel:+16308539348" className="btn-primary text-base px-5 py-2.5">
+            <a href="tel:+16308539348" className="btn-primary btn-shine text-base px-5 py-2.5">
               {t('Call (630) 853-9348')}
             </a>
-            <Link to={applyHref} className="btn-secondary text-base px-5 py-2.5 link-arrow">
+            <Link to={applyHref} className="btn-secondary btn-shine text-base px-5 py-2.5 link-arrow">
               {t('Get a quote')} <span className="arrow">→</span>
             </Link>
             {user && (
@@ -195,6 +219,17 @@ export default function Home() {
             <Stat kicker={t('Plans')} value={t('Weekly / monthly')} />
           </dl>
         </div>
+
+        {/* Bouncing scroll cue */}
+        <a
+          href="#fleet"
+          aria-label="Scroll to fleet"
+          className="hidden sm:flex absolute bottom-6 left-1/2 -translate-x-1/2 text-white/60 hover:text-white scroll-cue"
+        >
+          <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+          </svg>
+        </a>
       </section>
 
       {/* ─── Rental Fleet ──────────────────────────────────── */}
